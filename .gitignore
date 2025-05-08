@@ -10,3 +10,11 @@ wheels/
 .venv
 data/adef_intg_hn.tif
 Archive.zip
+**match.tif
+**.aux.xml
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+# VS Code settings
+.vscode/
+
+/results
