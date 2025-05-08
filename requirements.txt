@@ -1,0 +1,6 @@
+dask
+dask[distributed]
+geopandas
+matplotlib
+owslib
+rioxarray

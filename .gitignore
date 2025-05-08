@@ -8,3 +8,5 @@ wheels/
 
 # Virtual environments
 .venv
+data/adef_intg_hn.tif
+Archive.zip
