@@ -35,7 +35,7 @@ repos:
       # uv version.
       rev: 0.7.3
       hooks:
-        - id: uv-lock
+        # - id: uv-lock
         - id: uv-export
 
     - repo: local

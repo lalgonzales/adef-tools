@@ -14,7 +14,7 @@ dependencies:
     - attrs==25.3.0
     - certifi==2025.4.26
     - charset-normalizer==3.4.2
-    - click==8.1.8
+    - click==8.2.0
     - click-plugins==1.1.1
     - cligj==0.7.2
     - cloudpickle==3.1.1
@@ -23,7 +23,7 @@ dependencies:
     - cycler==0.12.1
     - dask==2025.4.1
     - distributed==2025.4.1
-    - fonttools==4.57.0
+    - fonttools==4.58.0
     - fsspec==2025.3.2
     - geopandas==1.0.1
     - idna==3.10
