@@ -5,16 +5,34 @@ build/
 dist/
 wheels/
 *.egg-info
+*.py[cod]
+*$py.class
 
 # Virtual environments
 .venv
+venv/
+env/
+.env/
+.conda/
 data/adef_intg_hn.tif
 Archive.zip
 **match.tif
 **.aux.xml
+
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints
+
 # VS Code settings
 .vscode/
 
+# Results
 /results
+
+# C extensions
+*.so
+
+# Data
+data/
+!data/bosque14_lzw.tif
+!data/bosque18_lzw.tif
+!data/bosque24_lzw.tif

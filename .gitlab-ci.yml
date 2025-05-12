@@ -2,9 +2,12 @@ stages:
   - lint
   - test
   - release
+  - build
+  - deploy
 
 variables:
   DOCKER_IMAGE: alpine:latest
+  UV_LINK_MODE: copy
 
 .default-tags:
   tags:
@@ -22,7 +25,6 @@ pre-commit:
     - git config --global user.email "ci-runner@gitlab.com"
     - git config --global user.name "GitLab CI"
     - git remote set-url origin "http://project_9_bot:${ADEF_INTG_TOKEN}@git.icf.gob.hn/alopez/adef-integ-tools.git"
-    - git checkout $CI_COMMIT_REF_NAME
   script:
     - uv venv .venv
     - source .venv/bin/activate
@@ -61,15 +63,122 @@ container_scanning:
 secret_detection:
   tags: [docker-runner]
 
-release-placeholder:
+build-linux:
   stage: release
   extends: .default-tags
   image: python:3.12
+  variables:
+    PRE_COMMIT_HOME: ${CI_PROJECT_DIR}/.cache/pre-commit
   before_script:
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.local/bin:$PATH"
+    - git config --global user.email "ci-runner@gitlab.com"
+    - git config --global user.name "GitLab CI"
+    - git remote set-url origin "http://project_9_bot:${ADEF_INTG_TOKEN}@git.icf.gob.hn/alopez/adef-integ-tools.git"
   script:
-    - echo "$CI_COMMIT_TAG"
-    - echo "Aquí podrías empaquetar, generar changelogs, etc."
+    - uv venv .venv
+    - source .venv/bin/activate
+    - uv pip install pyinstaller
+    - pyinstaller adef-intg.spec
+    - if [ ! -f dist/adef-intg/adef-intg ]; then echo "Binario no encontrado"; exit 1; fi
+    - echo "🚀 Subiendo binario como asset al release de GitLab..."
+    - |
+      curl --silent --fail --request POST "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links" \
+        --header "PRIVATE-TOKEN: ${ADEF_INTG_TOKEN}" \
+        --form "name=adef-intg Linux Binary" \
+        --form "url=$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/file/dist/adef-intg/adef-intg"
+  artifacts:
+    paths:
+      - dist/adef-intg/adef-intg
+    expire_in: 1 week
   rules:
-    - if: '$CI_COMMIT_TAG'  # se ejecuta solo cuando hay un tag
+    - if: '$CI_COMMIT_TAG && $CI_PIPELINE_SOURCE == "web"'
+
+build-windows:
+  stage: release
+  extends: .default-tags
+  image: cibuilds/wine:latest
+  script:
+    - apt-get update && apt-get install -y python3 python3-pip
+    - python3 -m pip install --upgrade pip
+    - python3 -m pip install uv
+    - uv pip install -r requirements.txt
+    - uv pip install pyinstaller
+    - pyinstaller adef-intg.spec --onefile --distpath dist/windows
+    - echo "📁 Validando binario generado..."
+    - test -f dist/windows/adef-intg.exe || (echo "❌ Binario no encontrado"; exit 1)
+
+    - echo "🚀 Subiendo como asset a la Release..."
+    - |
+      curl --silent --fail --request POST "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links" \
+        --header "PRIVATE-TOKEN: ${ADEF_INTG_TOKEN}" \
+        --form "name=adef-intg Windows Binary" \
+        --form "url=$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/file/dist/windows/adef-intg.exe"
+  artifacts:
+    paths:
+      - dist/windows/adef-intg.exe
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_TAG && $CI_PIPELINE_SOURCE == "web"'
+
+.test-template: &test-template
+  stage: test
+  extends: .default-tags
+  image: docker.io/python:${PYTHON_VERSION}
+  before_script:
+    - pip install uv
+  script:
+    - uv venv
+    - uv pip install .
+    - uv run python -c "import adef_intg; print('adef_intg import successful')"
+
+test:matrix:
+  parallel:
+    matrix:
+      - PYTHON_VERSION: "3.10"
+      - PYTHON_VERSION: "3.11"
+      - PYTHON_VERSION: "3.12"
+  <<: *test-template
+
+build_and_release:
+  stage: deploy
+  image: python:3.11
+  variables:
+    PACKAGE_NAME: "adef-intg"
+    DIST_DIR: "dist"
+    GITLAB_API: "https://git.icf.gob.hn/api/v4"
+  before_script:
+    - pip install uv hatch requests
+  script:
+    - uv pip install -e .[build]
+    - uv build
+
+    # Crear release en GitLab (si no existe ya)
+    - |
+      TAG="${CI_COMMIT_TAG}"
+      RELEASE_NAME="Release ${TAG}"
+      curl --header "PRIVATE-TOKEN: ${CIBOT_TOKEN}" \
+           --request POST \
+           --data "name=${RELEASE_NAME}&tag_name=${TAG}&description=Automated release for ${PACKAGE_NAME} ${TAG}" \
+           "${GITLAB_API}/projects/${CI_PROJECT_ID}/releases" || echo "Release already exists or was created manually."
+
+    # Subir artefactos a la release como enlaces de descarga
+    - |
+      for file in ${DIST_DIR}/*; do
+        echo "Uploading $file to project..."
+        curl --header "PRIVATE-TOKEN: ${CIBOT_TOKEN}" \
+             --upload-file "${file}" \
+             "${GITLAB_API}/projects/${CI_PROJECT_ID}/uploads" > response.json
+
+        URL=$(cat response.json | python -c "import sys, json; print(json.load(sys.stdin)['url'])")
+        NAME=$(basename "${file}")
+        echo "Adding link ${NAME} → ${CI_PROJECT_URL}${URL} to release ${TAG}"
+        curl --header "PRIVATE-TOKEN: ${CIBOT_TOKEN}" \
+             --request POST \
+             --data "name=${NAME}&url=${CI_PROJECT_URL}${URL}" \
+             "${GITLAB_API}/projects/${CI_PROJECT_ID}/releases/${TAG}/assets/links"
+      done
+
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: always

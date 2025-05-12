@@ -1,9 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "adef-intg"
 version = "0.1.0"
 description = "Script to work with Integrated Alert Deforestacion"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+authors = [
+    { name = "Luis Alfredo López Gonzales", email = "lalgonzales@gmail.com" }
+]
+
+keywords = [
+    "deforestation",
+    "alert",
+    "integrated",
+    "monitoring",
+    "geospatial",
+    "analysis",
+]
+
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
 dependencies = [
     "dask[distributed]>=2025.4.1",
     "geopandas>=1.0.1",
@@ -12,10 +41,63 @@ dependencies = [
     "rioxarray>=0.19.0",
 ]
 
+[project.scripts]
+adef-intg = "adef_intg.cli:cli"
+
+[project.urls]
+repository = "https://git.icf.gob.hn/alopez/adef-integ-tools"
+homepage = "https://git.icf.gob.hn/alopez/adef-integ-tools"
+issues = "https://git.icf.gob.hn/alopez/adef-integ-tools/-/issues"
+
+[tool.hatch.version]
+path = "adef_intg/__init__.py"
+
+[tool.bumpversion]
+current_version = "0.1.0"
+commit = true
+tag = true
+message = "🔖 Bump version: {current_version} → {new_version}"
+tag_name = "v{new_version}"
+tag_message = "🔖 Bump version: {current_version} → {new_version}"
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "adef_intg/__init__.py"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[tool.hatch.envs.default]
+dependencies = [
+    "pytest",
+    "flake8",
+    "pre-commit"
+]
+scripts.test = "pytest"
+
+[tool.flake8]
+exclude = ["tests", "docs"]
+max-line-length = 88
+
 [dependency-groups]
+tests = [
+    "bokeh>=3.1.0",
+]
+
+[project.optional-dependencies]
 dev = [
     "bump-my-version>=1.1.2",
     "notebook>=7.4.2",
     "pip>=25.1.1",
-    "pre-commit>=4.2.0",
+    "pre-commit>=4.2.0"
+]
+build = [
+    "fiona>=1.10.1",
+    "pyinstaller>=6.13.0",
+    "pyproj>=3.7.1",
+    "rasterio>=1.4.3",
+    "shapely>=2.1.0"
 ]
