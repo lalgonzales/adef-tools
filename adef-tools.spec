@@ -3,7 +3,7 @@ from PyInstaller.utils.hooks import collect_submodules
 from pathlib import Path
 
 # Ruta base de tu script
-src_path = Path(".") / "adef_intg"
+src_path = Path(".") / "adef_tools"
 
 # Entrypoint
 entry_script = str(src_path / "cli.py")
@@ -21,7 +21,8 @@ a = Analysis(
     hiddenimports=hidden,
     hookspath=[],
     runtime_hooks=[],
-    excludes=[],
+    excludes=["docs", "data", "results"],
+    adicionales
 )
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)

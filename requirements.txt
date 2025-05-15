@@ -167,7 +167,7 @@ dask==2025.4.1 \
     --hash=sha256:3b4b5d6e29d858c48339a5b9a99c39f11cb44111d3836d77ff32da51e0f51243 \
     --hash=sha256:aacbb0a9667856fe58385015efd64aca22f0c0b2c5e1b5e633531060303bb4be
     # via
-    #   adef-intg
+    #   adef-tools
     #   distributed
 distributed==2025.4.1 \
     --hash=sha256:3a7834451b04ef059928045eab6ff6d88ad7bcfd48adc99403127d9a6818b5fa \
@@ -216,7 +216,7 @@ fsspec==2025.3.2 \
 geopandas==1.0.1 \
     --hash=sha256:01e147d9420cc374d26f51fc23716ac307f32b49406e4bd8462c07e82ed1d3d6 \
     --hash=sha256:b8bf70a5534588205b7a56646e2082fb1de9a03599651b3d80c99ea4c2ca08ab
-    # via adef-intg
+    # via adef-tools
 idna==3.10 \
     --hash=sha256:12f65c9b470abda6dc35cf8e63cc574b1c52b11df2c86030af0ac09b01b13ea9 \
     --hash=sha256:946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3
@@ -482,7 +482,7 @@ matplotlib==3.10.3 \
     --hash=sha256:f6929fc618cb6db9cb75086f73b3219bbb25920cb24cee2ea7a12b04971a4158 \
     --hash=sha256:fd5641a9bb9d55f4dd2afe897a53b537c834b9012684c8444cc105895c8c16fd \
     --hash=sha256:fdfa07c0ec58035242bc8b2c8aae37037c9a886370eef6850703d7583e19964b
-    # via adef-intg
+    # via adef-tools
 msgpack==1.1.0 \
     --hash=sha256:06f5fd2f6bb2a7914922d935d3b8bb4a7fff3a9a91cfce6d06c13bc42bec975b \
     --hash=sha256:071603e2f0771c45ad9bc65719291c568d4edf120b44eb36324dcb02a13bfddf \
@@ -599,7 +599,7 @@ numpy==2.2.5 \
 owslib==0.33.0 \
     --hash=sha256:261c76c1a1dd066b011cddac451e3f9a00d3328c7af90d5592c089b5fc590766 \
     --hash=sha256:bcfeb8527a601971e975c9196282ce9b330f6f1a0c6d5931131424206a98258e
-    # via adef-intg
+    # via adef-tools
 packaging==25.0 \
     --hash=sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484 \
     --hash=sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f
@@ -885,7 +885,7 @@ requests==2.32.3 \
 rioxarray==0.19.0 \
     --hash=sha256:494ee4fff1781072d55ee5276f5d07b63d93b05093cb33b926a12186ba5bb8ef \
     --hash=sha256:7819a0036fd874c8c8e280447cbbe43d8dc72fc4a14ac7852a665b1bdb7d4b04
-    # via adef-intg
+    # via adef-tools
 shapely==2.1.0 \
     --hash=sha256:0d6a7043178890b9e028d80496ff4c79dc7629bff4d78a2f25323b661756bab8 \
     --hash=sha256:15cebc323cec2cb6b2eaa310fdfc621f6dbbfaf6bde336d13838fcea76c885a9 \
