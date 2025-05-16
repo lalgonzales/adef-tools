@@ -153,7 +153,7 @@ def run_adef_process(
 
     if start_date and end_date:
         print(f"...Filtrando por las fechas {start_date} - {end_date}")
-        tif_masked = utils_adef.filter_adef_intg_time(
+        tif_masked, _, _ = utils_adef.filter_adef_intg_time(
             tif_masked,
             ("Range", start_date, end_date),
             chunks=chunks_default,
