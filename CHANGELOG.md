@@ -1,3 +1,9 @@
+## v0.2.1 (2025-05-16)
+
+### Fix
+
+- update function call to handle additional parameter in run_adef_process
+
 ## v0.2.0 (2025-05-16)
 
 ### Feat
