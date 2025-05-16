@@ -194,12 +194,16 @@ auto-bump:
     - source .venv/bin/activate
     - uv pip install -U commitizen
   script:
+    - git tag -l | xargs -r git tag -d
+    - git fetch --tags --prune --force
+    - 'exists=`git show-ref refs/heads/main` && if [ -n "$exists" ]; then git branch -D main; fi'
+    - git checkout -b main
     - cz bump --yes
-    - git push origin HEAD:$CI_COMMIT_REF_NAME
-    - TAG=$(head -n 1 VERSION)
+    - git push origin main:$CI_COMMIT_REF_NAME
+    - TAG=v$(cz version -p)
     - echo "#!/bin/sh" >> variables
     - echo "export TAG='$TAG'" >> variables
-    - git push origin $TAG
+    - git push origin --tags
   only:
     refs:
       - main

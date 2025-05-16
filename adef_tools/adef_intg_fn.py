@@ -6,11 +6,8 @@
 import os
 import time
 import warnings
-from pyogrio.errors import DataSourceError
 
-import threading
 import geopandas as gpd
-import rioxarray as rxr
 from shapely.errors import ShapelyDeprecationWarning
 from adef_tools import utils_adef
 
