@@ -3,6 +3,7 @@
 import os
 import sys
 import platform
+import glob
 import shutil
 import threading
 import pathlib
@@ -14,7 +15,7 @@ import rioxarray as rxr
 import xarray as xr
 import pandas as pd
 import geopandas as gpd
-
+from tqdm import tqdm
 
 # from osgeo import gdal
 from owslib.wfs import WebFeatureService
@@ -121,7 +122,9 @@ def calculate_decompose_date(gdf, gridcode, adef_src, year=None):
         raise
 
 
-def check_tif_attr(tif_no_adjust, tif_reference, tif_matched, chunks="auto"):
+def check_tif_attr(
+    tif_no_adjust, tif_reference, tif_matched, chunks="auto", lock_read=True
+):
     """
     Checks the attributes of a raster file against a reference raster file and determines if adjustments are needed.
 
@@ -143,56 +146,35 @@ def check_tif_attr(tif_no_adjust, tif_reference, tif_matched, chunks="auto"):
         dict or None: A dictionary containing the comparison results if adjustments are needed,
         or None if the raster file already matches the reference.
     """
-    # Create the names of the TIF files
-    tif_no_adjust_name = os.path.basename(tif_no_adjust).split(".")[:-1][0]
-    # tif_reference_name = os.path.basename(tif_reference).split(".")[:-1][0]
-    tif_out_name = os.path.basename(tif_matched).split(".")[:-1][0]
+    # Validate the entries
+    tif_to_adjusd, tif_to_adjust_name = validate_setting_tif(
+        tif_no_adjust, chunks=chunks, lock_read=lock_read
+    )
+    tif_reference, tif_reference_name = validate_setting_tif(
+        tif_reference, chunks=chunks, lock_read=lock_read
+    )
 
-    # Validate if the input TIF file and reference file exist
-    if not os.path.exists(tif_no_adjust):
-        raise FileNotFoundError(
-            f"The input raster file does not exist: {tif_no_adjust_name}"
-        )
-    # if not os.path.exists(tif_reference):
-    #     raise FileNotFoundError(
-    #         "The reference raster file does not exist: {tif_reference_name}"
-    #     )
-
-    # Start the comparison process
     print(
-        "...comparing the raster {tif_no_adjust_name} based on properties of {tif_reference_name}"
+        f"...comparing the raster {tif_to_adjust_name} based on properties of {tif_reference_name}"
     )
     if os.path.exists(tif_matched):
+        tif_adjusted, tif_adjusted_name = validate_setting_tif(tif_matched)
         try:
-            tif_adjusted = rxr.open_rasterio(
-                tif_matched,
-                chunks=chunks,
-                lock=True,
+            crs_test = tif_adjusted.rio.crs == tif_to_adjusd.rio.crs
+            transform_test = (
+                tif_adjusted.rio.transform() == tif_to_adjusd.rio.transform()
             )
-            if isinstance(tif_reference, (str, pathlib.Path)):
-                tif_test = rxr.open_rasterio(
-                    tif_reference,
-                    chunks=chunks,
-                    lock=True,
-                )
-            elif isinstance(tif_reference, xr.DataArray):
-                tif_test = tif_reference
-            else:
-                raise TypeError(
-                    "The reference TIF must be a string or an xarray DataArray."
-                )
-
-            crs_test = tif_adjusted.rio.crs == tif_test.rio.crs
-            transform_test = tif_adjusted.rio.transform() == tif_test.rio.transform()
-            bounds_test = tif_adjusted.rio.bounds() == tif_test.rio.bounds()
-            resolution_test = tif_adjusted.rio.resolution() == tif_test.rio.resolution()
+            bounds_test = tif_adjusted.rio.bounds() == tif_to_adjusd.rio.bounds()
+            resolution_test = (
+                tif_adjusted.rio.resolution() == tif_to_adjusd.rio.resolution()
+            )
             if crs_test and transform_test and bounds_test and resolution_test:
                 print(
-                    f"...the raster {tif_no_adjust_name} is already adjusted as {tif_out_name}. No action will be taken."
+                    f"...the raster {tif_to_adjust_name} is already adjusted as {tif_adjusted_name}. No action will be taken."
                 )
                 return None
 
-            print(f"The raster {tif_no_adjust_name} does not match...")
+            print(f"The raster {tif_to_adjust_name} does not match...")
             result = {
                 "tif_path": tif_no_adjust,
                 "crs_test": crs_test,
@@ -202,11 +184,11 @@ def check_tif_attr(tif_no_adjust, tif_reference, tif_matched, chunks="auto"):
             }
             return result
         except Exception as e:
-            print(f"Error comparing the raster {tif_no_adjust_name}")
+            print(f"Error comparing the raster {tif_to_adjust_name}")
             raise e
     else:
         print(
-            "...the {tif_out_name} does not exist, proceeding to adjust the raster with {tif_reference_name}"
+            f"...the {tif_to_adjust_name} need adjust, proceeding to adjust the raster with {tif_reference_name}"
         )
         result = {
             "tif_path": tif_no_adjust,
@@ -218,7 +200,7 @@ def check_tif_attr(tif_no_adjust, tif_reference, tif_matched, chunks="auto"):
         return result
 
 
-def adjust_tif(tif_no_adjust, tif_reference, tif_out, chunks="auto", lock_read=True):
+def adjust_tif(tif_no_adjust, tif_reference, tif_out, chunks="auto"):
     """
     Adjusts a raster file to match the spatial attributes of a reference raster file.
 
@@ -235,40 +217,20 @@ def adjust_tif(tif_no_adjust, tif_reference, tif_out, chunks="auto", lock_read=T
     Returns:
         None
     """
-    # Create the names of the TIF files
-    tif_no_adjust_name = os.path.basename(tif_no_adjust).split(".")[:-1][0]
-    # tif_reference_name = os.path.basename(tif_reference).split(".")[:-1][0]
-    tif_out_name = os.path.basename(tif_out).split(".")[:-1][0]
-
-    # Validate if the input TIF file and reference file exist
-    if not os.path.exists(tif_no_adjust):
-        raise FileNotFoundError(
-            f"The input raster file does not exist: {tif_no_adjust_name}"
-        )
-    # if not os.path.exists(tif_reference):
-    #     raise FileNotFoundError(
-    #         "The reference raster file does not exist: {tif_reference_name}"
-    #     )
+    # Validating and creating the array data
+    tif_to_adjust, tif_to_adjust_name = validate_setting_tif(tif_no_adjust)
+    tif_ref, tif_ref_name = validate_setting_tif(tif_reference)
 
     # Check the attributes of the rasters file
-    result = check_tif_attr(tif_no_adjust, tif_reference, tif_out, chunks=chunks)
+    result = check_tif_attr(tif_to_adjust, tif_reference, tif_out, chunks=chunks)
     if result is None:
         return
 
     # Start the adjustment process
-    print("...Adjusting the raster {tif_no_adjust_name} with {tif_reference_name}")
+    print(f"...Adjusting the raster {tif_to_adjust_name} with {tif_ref_name}")
     try:
-        if isinstance(tif_reference, (str, pathlib.Path)):
-            tif_ref = rxr.open_rasterio(tif_reference, chunks=chunks, lock=lock_read)
-        elif isinstance(tif_reference, xr.DataArray):
-            tif_ref = tif_reference
-        else:
-            raise TypeError(
-                "The reference TIF must be a string or an xarray DataArray."
-            )
         xmin, ymin, xmax, ymax = tif_ref.rio.bounds()
         gdalwarp_path = get_gdalwarp_path()
-        print(f"Using {gdalwarp_path} to adjust the raster")
         gdal_adjust = (
             f"{gdalwarp_path} "
             f"-t_srs {tif_ref.rio.crs} "
@@ -286,10 +248,11 @@ def adjust_tif(tif_no_adjust, tif_reference, tif_out, chunks="auto", lock_read=T
             f"{tif_out}"
         )
         os.system(gdal_adjust)
+        tif_out_name = os.path.basename(tif_out).split(".")[:-1][0]
         print(f"Raster ajustado y guardado en {tif_out_name}")
         return
     except Exception as e:
-        print("No se pudo ajustar {tif_no_adjust_name} con {tif_reference_name}")
+        print(f"No se pudo ajustar {tif_to_adjust_name} con {tif_ref_name}")
         raise e
 
 
@@ -317,34 +280,13 @@ def mask_by_tif(
     Returns:
         xr.DataArray or None: The masked raster as an xarray DataArray if tif_out is None, otherwise None.
     """
-    # Create the data of the TIF files or load them if they are already opened
-    # Mask data
-    if isinstance(tif_mask, (str, pathlib.Path)):
-        tif_mask_name = os.path.basename(tif_mask).split(".")[:-1][0]
-        if not os.path.exists(tif_mask):
-            raise FileNotFoundError(
-                f"The mask TIF file does not exist: {tif_mask_name}"
-            )
-        mask_data = rxr.open_rasterio(tif_mask, chunks=chunks, lock=lock_read)
-    elif isinstance(tif_mask, xr.DataArray):
-        tif_mask_name = "Mask TIF"
-        mask_data = tif_mask
-    else:
-        raise TypeError("The mask must be a string or an xarray DataArray.")
-
-    # Data to be masked
-    if isinstance(tif_to_mask, (str, pathlib.Path)):
-        tif_to_mask_name = os.path.basename(tif_to_mask).split(".")[:-1][0]
-        if not os.path.exists(tif_to_mask):
-            raise FileNotFoundError(
-                f"The TIF file to be masked does not exist: {tif_to_mask_name}"
-            )
-        tif_data = rxr.open_rasterio(tif_to_mask, chunks=chunks, lock=lock_read)
-    elif isinstance(tif_to_mask, xr.DataArray):
-        tif_to_mask_name = "TIF to mask"
-        tif_data = tif_to_mask
-    else:
-        raise TypeError("The TIF to mask must be a string or an xarray DataArray.")
+    # Validating and creating the array data
+    tif_data, tif_to_mask_name = validate_setting_tif(
+        tif_to_mask, chunks=chunks, lock_read=lock_read
+    )
+    mask_data, tif_mask_name = validate_setting_tif(
+        tif_mask, chunks=chunks, lock_read=lock_read
+    )
 
     # Start the masking process
     print(f"Starting the masking of {tif_to_mask_name} with {tif_mask_name}...")
@@ -386,30 +328,8 @@ def filter_adef_intg_conf(
     Returns:
         None
     """
-    if isinstance(tif, (str, pathlib.Path)):
-        # Create the names of the TIF files
-        tif_name = os.path.basename(tif).split(".")[:-1][0]
-
-        # Validate if the input TIF file exists
-        if not os.path.exists(tif):
-            raise FileNotFoundError(f"The input TIF file does not exist: {tif_name}")
-        tif_data = rxr.open_rasterio(
-            tif,
-            chunks=chunks,
-            lock=lock_read,
-        )
-    elif isinstance(tif, xr.DataArray):
-        if tif.name is not None:
-            tif_name = tif.name
-            tif_data = tif
-        else:
-            raise ValueError(
-                "The TIF must have a name. Assign one using `data.name = name`."
-            )
-    else:
-        raise TypeError(
-            f"The TIF must be a string or an xarray DataArray. Got {type(tif)}"
-        )
+    # Validate and create array data
+    tif_data, tif_name = validate_setting_tif(tif, chunks=chunks, lock_read=lock_read)
 
     # Start the filtering process
     print(
@@ -545,7 +465,6 @@ def mask_adef_hn_by_forest(
                     tif_adef_roi,
                     tif_forest14_match,
                     chunks=chunks,
-                    lock_read=lock_read,
                 )
                 adef_hn_masked_lt18 = mask_by_tif(
                     tif_forest14_match,
@@ -574,7 +493,6 @@ def mask_adef_hn_by_forest(
                 tif_adef_roi,
                 tif_forest18_match,
                 chunks=chunks,
-                lock_read=lock_read,
             )
             adef_hn_masked_gte18 = mask_by_tif(
                 tif_forest18_match,
@@ -598,7 +516,6 @@ def mask_adef_hn_by_forest(
                 tif_adef_roi,
                 tif_forest24_match,
                 chunks=chunks,
-                lock_read=lock_read,
             )
             adef_hn_masked_gte24 = mask_by_tif(
                 tif_forest24_match,
@@ -661,7 +578,9 @@ def tif_to_vector(tif, out_folder, out_file="vector.gpkg", layer_name=None):
 
     if layer_name is None:
         layer_name = os.path.basename(out_file).split(".")[:-1][0]
-    driver = out_file.split(".")[-1]
+    driver = out_file.split(".")[-1].lower()
+    if driver == "shp":
+        driver = "'ESRI Shapefile'"
     out_vector = os.path.join(out_folder, out_file)
     polygonize_path = get_gdal_polygonize_path()
     print(f"using {polygonize_path} to convert the raster to vector")
@@ -674,7 +593,10 @@ def tif_to_vector(tif, out_folder, out_file="vector.gpkg", layer_name=None):
         f"-overwrite "
         f"-mask {tif} "
     )
-    os.system(command)
+    try:
+        os.system(command)
+    except:
+        raise
     print(f"Vector file saved as {out_file} in {out_folder}")
 
 
@@ -863,6 +785,7 @@ def sanitize_gdf_dtypes(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         gpd.GeoDataFrame: Copy with corrected types.
     """
     gdf = gdf.copy()
+    geom_name = gdf.geometry.name
     for col in gdf.columns:
         if pd.api.types.is_extension_array_dtype(gdf[col].dtype):
             if pd.api.types.is_integer_dtype(gdf[col].dtype):
@@ -873,6 +796,8 @@ def sanitize_gdf_dtypes(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
                 gdf[col] = gdf[col].astype(str)
             elif pd.api.types.is_bool_dtype(gdf[col].dtype):
                 gdf[col] = gdf[col].astype(bool)
+            elif col == geom_name:
+                pass
             else:
                 print(f"Tipo no manejado: {col} - {gdf[col].dtype}")
     return gdf
@@ -895,7 +820,8 @@ def get_wfs_layer(wfs_url, layer_name, version="1.0.0"):
     try:
         # Get the list of available layers
         layers = wfs.contents
-        print(f"Number of available layers: {len(layers)}")
+        if layers:
+            pass
     except:
         print(f"Error: Unable to connect to WFS service at {wfs_url}")
         raise
@@ -905,7 +831,6 @@ def get_wfs_layer(wfs_url, layer_name, version="1.0.0"):
         response = wfs.getfeature(typename=layer_name, outputFormat="application/json")
         gdf = gpd.read_file(response)
         gdf = sanitize_gdf_dtypes(gdf)
-        print(f"Layer '{layer_name}' retrieved successfully.")
         return gdf
     except Exception as e:
         print(f"Error: Unable to retrieve layer '{layer_name}' from WFS service.")
@@ -933,15 +858,7 @@ def clip_tif_to_ext(
         xr.DataArray or None: The clipped raster as an xarray DataArray if out_tif is None, otherwise None.
     """
     # Validate if the input TIF file and vector file exist
-    if isinstance(tif, (str, pathlib.Path)):
-        tif_name = os.path.basename(tif).split(".")[:-1][0]
-        if not os.path.exists(tif):
-            raise FileNotFoundError(f"The input TIF file does not exist: {tif_name}")
-        tif = rxr.open_rasterio(tif, chunks=chunks, lock=lock_read)
-    elif isinstance(tif, xr.DataArray):
-        tif_name = "tif"
-    else:
-        raise TypeError("The TIF must be a string or an xarray DataArray.")
+    tif, tif_name = validate_setting_tif(tif)
 
     if isinstance(vector, (str, pathlib.Path)):
         vector_name = os.path.basename(vector).split(".")[:-1][0]
@@ -1014,6 +931,9 @@ def get_gdal_polygonize_path():
 
     raise FileNotFoundError(
         "gdal_polygonize not found. Ensure GDAL is installed and available."
+        "For conda run `conda install -c conda-forge gdal` for Windows users."
+        "For Linux users with uv, run `uv pip install --find-links https://girder.github.io/large_image_wheels gdal pyproj`."
+        "otherwise, install GDAL from your package manager (e.g., apt, yum, dnf) or from source."
     )
 
 
@@ -1049,4 +969,270 @@ def get_gdalwarp_path():
 
     raise FileNotFoundError(
         "gdalwarp not found. Ensure GDAL is installed and available."
+        "For conda run `conda install -c conda-forge gdal` for Windows users."
+        "For Linux users with uv, run `uv pip install --find-links https://girder.github.io/large_image_wheels gdal pyproj`."
+        "otherwise, install GDAL from your package manager (e.g., apt, yum, dnf) or from source."
     )
+
+
+def validate_setting_tif(tif, chunks="auto", lock_read=True):
+    """
+    Validates and loads a TIF file or xarray.DataArray, returning the object and its name.
+
+    Args:
+        tif (str, pathlib.Path, or xr.DataArray): Path to the TIF file or an xarray DataArray.
+
+    Raises:
+        FileNotFoundError: If the TIF file path does not exist.
+        ValueError: If the DataArray does not have a name.
+
+    Returns:
+        tuple: (tif object, tif name)
+    """
+    if isinstance(tif, (str, pathlib.Path)):
+        tif_name = os.path.basename(tif).split(".")[:-1][0]
+        if not os.path.exists(tif):
+            raise FileNotFoundError(f"The input TIF file does not exist: {tif_name}")
+        tif_data = rxr.open_rasterio(tif, chunks=chunks, lock=lock_read)
+        tif_data.name = tif_name
+        return tif_data, tif_name
+    elif isinstance(tif, xr.DataArray):
+        if tif.name is not None:
+            tif_name = tif.name
+            tif_data = tif
+            return tif_data, tif_name
+        else:
+            raise ValueError(
+                "The TIF must have a name. Assign one using `data.name = name`."
+            )
+
+
+def default_vector():
+    """
+    Returns the default vector layer (departments of Honduras) as a GeoDataFrame.
+
+    Returns:
+        gpd.GeoDataFrame: GeoDataFrame of Honduras departments.
+    """
+    ## Preparar los datos auxiliares
+    # Crear la conexion al servicio WFS
+    url_icf_wfs = "https://geoserver.icf.gob.hn/icfpub/wfs"
+
+    # Obtener el GeoDataFrame de los departamentos de Honduras
+    lyr_dep = "icfpub:limite_departamentos_gp"
+    gdf_dep = get_wfs_layer(
+        url_icf_wfs,
+        lyr_dep,
+        version="1.1.0",
+    )
+    return gdf_dep
+
+
+def divide_intg_for_forest(
+    tif_intg,
+    periods,
+    chunks="auto",
+    lock_read=True,
+    lock_write=None,
+    out_folder=None,
+):
+
+    # Validate and create array data
+    tif_data, tif_name = validate_setting_tif(
+        tif_intg, chunks=chunks, lock_read=lock_read
+    )
+
+    n_periods = len(periods)
+    zero_day = pd.Timestamp("2014-12-31")
+    dic_tifs = {}
+    print(f"Dividing the TIF {tif_name} into {n_periods} periods...")
+    try:
+        # Iterating over the pairs of periods
+        for i in tqdm(range(n_periods), desc="Processing periods"):
+            period = periods[i]
+            start = period[0]
+            end = period[1]
+            print(f"...Processing the period {start} to {end}...")
+            start_day = (pd.Timestamp(start) - zero_day).days
+            end_day = (pd.Timestamp(end) - zero_day).days
+            tif_in_days = tif_data % 10000
+            mask = (tif_in_days >= start_day) & (tif_in_days <= end_day)
+            tif_intg_period = tif_data.where(mask, 0)
+            name = f"{tif_name}_{start}_{end}"
+            tif_intg_period.name = name
+            dic_tifs[name] = tif_intg_period
+            if out_folder is not None:
+                out_tif_name = os.path.join(out_folder, f"{name}.tif")
+                tif_intg_period.rio.to_raster(
+                    out_tif_name,
+                    tiled=True,
+                    compress="DEFLATE",
+                    lock=lock_write or threading.Lock(),
+                )
+        return dic_tifs
+    except Exception as e:
+        print(f"Error dividing the TIF {tif_name} into periods")
+        raise e
+
+
+def mask_by_forest(
+    tif_to_mask,
+    forest_masks,
+    tif_out=None,
+    chunks="auto",
+    lock_read=True,
+    lock_write=None,
+):
+    """
+    Masks a raster file (TIF) for a specific period using the appropriate forest mask.
+
+    Args:
+        tif_to_mask (str or xr.DataArray): Path to the raster file to be masked or an xarray DataArray.
+        forest_masks (list): List of paths to forest mask raster files (e.g., for years 2014, 2018, 2024).
+        tif_out (str, optional): Path to save the output masked raster file. If None, the masked raster is returned as an xarray DataArray.
+        chunks (str, int, dict, or bool, optional): Chunk size for reading the raster files. Defaults to "auto".
+        lock_read (bool, optional): Whether to use a lock when reading files. Defaults to True.
+        lock_write (threading.Lock or None, optional): Lock to use when writing files. Defaults to None.
+
+    Raises:
+        ValueError: If the start date is after the end date.
+        ValueError: If the date range does not match any valid forest mask period.
+
+    Returns:
+        xr.DataArray or None: The masked raster as an xarray DataArray if tif_out is None, otherwise None.
+    """
+    # Validate and create array data
+    tif_data, tif_to_mask_name = validate_setting_tif(
+        tif_to_mask, chunks=chunks, lock_read=lock_read
+    )
+
+    # Extract the dates from the TIF
+    dates = tif_to_mask_name.split("_")
+    start_date = pd.Timestamp(dates[-2])
+    end_date = pd.Timestamp(dates[-1])
+
+    if start_date > end_date:
+        raise ValueError(
+            f"The start date {start_date} is greater than the end date {end_date}"
+        )
+
+    # Validate the period to select the forest masks
+    if end_date < pd.Timestamp("2018-01-01"):
+        forest_mask = [f for f in forest_masks if "14" in str(f)]
+    elif end_date < pd.Timestamp("2024-01-01"):
+        forest_mask = [f for f in forest_masks if "18" in str(f)]
+    elif end_date >= pd.Timestamp("2024-01-01"):
+        forest_mask = [f for f in forest_masks if "24" in str(f)]
+    else:
+        raise ValueError(
+            f"Pass a valid date range for the forest masks: {start_date} to {end_date}, valid ranges dates are: "
+            "2014-01-01 to 2017-12-31, 2018-01-01 to 2023-12-31, 2024-01-01 to present"
+        )
+
+    # Validate and create the forest mask
+    # Adjust the forest mask to the TIF
+    folder_forest = os.path.dirname(forest_mask[0])
+    forest_name = os.path.basename(forest_mask[0]).split(".")[0]
+    forest_adjusted = os.path.join(folder_forest, f"{forest_name}_match.tif")
+    adjust_tif(
+        forest_mask[0],
+        tif_data,
+        forest_adjusted,
+        chunks=chunks,
+    )
+    tif_masked = mask_by_tif(
+        forest_adjusted,
+        tif_data,
+        tif_out=tif_out,
+        chunks=chunks,
+        lock_read=lock_read,
+        lock_write=lock_write,
+    )
+    return tif_masked
+
+
+def clip_tif_gdal(
+    tif, roi_clip, tif_out, extend=True, chunks="auto", lock_read=True, **vector_kwargs
+):
+    """
+    Clips a raster file (TIF) using GDAL's gdalwarp utility and a vector file or GeoDataFrame as the cutline.
+
+    Args:
+        tif (str or pathlib.Path): Path to the input TIF file to be clipped.
+        roi_clip (str, pathlib.Path, or gpd.GeoDataFrame): Path to the vector file or a GeoDataFrame used as the cutline.
+        tif_out (str): Path to save the output clipped TIF file.
+        extend (bool, optional): If True, extends the bounds of the output raster to include the cutline. Defaults to True.
+        chunks (str, int, dict, or bool, optional): Chunk size for reading the raster files. Defaults to "auto".
+        lock_read (bool, optional): Whether to use a lock when reading files. Defaults to True.
+        **kwargs: Additional keyword arguments for reading the vector file.
+
+    Raises:
+        TypeError: If the vector is not a file path or a GeoDataFrame.
+
+    Returns:
+        None
+    """
+    # # Validate the input TIF file and create
+    tif_data, tif_name = validate_setting_tif(tif, chunks=chunks, lock_read=lock_read)
+    xres, yres = tif_data.rio.resolution()
+
+    # Validate the input vector file
+    if isinstance(roi_clip, (str, pathlib.Path)) and os.path.exists(roi_clip):
+        data_clip = gpd.read_file(roi_clip, **vector_kwargs)
+    if isinstance(roi_clip, gpd.GeoDataFrame):
+        data_clip = roi_clip
+    else:
+        raise TypeError("The vector must be a file path or a GeoDataFrame.")
+
+    gdal_warp_path = get_gdalwarp_path()
+    if data_clip.crs != "EPSG:4326":
+        data_clip = data_clip.to_crs("EPSG:4326")
+    ext = data_clip.total_bounds
+    print(f"Using {gdal_warp_path} to clip the TIF")
+    cmd = (
+        f"{gdal_warp_path} "
+        f"-overwrite "
+        f"-t_srs EPSG:4326 "
+        f"-te {ext[0]} {ext[1]} {ext[2]} {ext[3]} "
+        f"-tr {xres} {yres} "
+        f"-srcnodata 0 "
+        f"-dstnodata 0 "
+        f"-co TILED=YES "
+        f"-co COMPRESS=DEFLATE "
+        f"-wo NUM_THREADS=ALL_CPUS "
+        f"-multi "
+        f"-ot uint16 "
+        f"{tif} "
+        f"{tif_out}"
+    )
+    try:
+        os.system(cmd)
+    except:
+        print(f"Error clipping {tif_name} with {roi_clip}")
+        raise
+    print(f"Clipped {tif_name} saved as {tif_out}")
+    return None
+
+
+def clean_files(dir_path="."):
+    """
+    Removes all files matching the pattern 'clipped*.tif' in the current directory.
+
+    Returns:
+        None
+    """
+    files_pattern = ["clipped", "tmp"]
+    files = []
+    for pattern in files_pattern:
+        files.extend(
+            glob.glob(os.path.join(dir_path, f"**/*{pattern}*"), recursive=True)
+        )
+    if not files:
+        print("No files to remove")
+        return
+    for file in files:
+        try:
+            os.remove(file)
+        except:
+            print(f"Error removing {file}")
+    print("Directory cleaned")

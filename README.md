@@ -1,81 +1,96 @@
-# Configuraciones y uso del proyecto
-
-## Instalación de `uv`
-
-El proyecto funciona con `uv` para gestionar el entorno virtual y las dependencias. A continuación, se explica cómo instalarlo según tu sistema operativo:
-
-### En Linux
-Ejecuta el siguiente la siguiente linea en la terminal para instalar `uv`:
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-### En Windows
-Abre PowerShell y ejecuta:
-```bash
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-
-### Verificar la instalación
-Después de instalar `uv`, verifica que esté correctamente instalado ejecutando:
-```bash
-uv --version
-```
-
-Si el se muestra la versión de `uv`, la instalación fue exitosa.
+# Configuración y uso de adef-tools
 
 ---
 
-## Inicializar el proyecto
+## 1. Configurando el entorno de Python
 
-### Primera ejecución
-Para configurar el entorno virtual y asegurarte de que todas las dependencias estén instaladas, ejecuta:
+### En Linux/Mac (recomendado: `uv`)
+
+Instala `uv` siguiendo la documentación del sitio:
+
 ```bash
-uv run hello.py
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+Más opciones de instalación:
+https://docs.astral.sh/uv/getting-started/installation/
+
+Crea y activa el entorno virtual:
+```bash
+uv venv
+source .venv/bin/activate
 ```
 
-Este instrucción instalará automáticamente las dependencias necesarias y verificará que todo esté listo para usar.
-
-### Ejecutar el proyecto principal
-El proyecto incluye una "Command Line Interfaz" (CLI) para procesar alertas integradas. Para ejecutarla, usa el siguiente corre esta linea en la terminal:
-Una vez configurado el entorno, puedes ejecutar el proyecto principal con:
+Instala las dependencias principales (incluyendo ruedas especiales para GDAL y pyproj):
 ```bash
-uv run adef_intg/cli.py
+uv pip install --find-links https://girder.github.io/large_image_wheels gdal pyproj
 ```
 
-Si no proporcionas opciones, se usarán los siguientes valores predeterminados:
+---
+
+### En Windows (recomendado: Miniconda)
+
+Instala Miniconda con winget:
+```bash
+winget install anaconda.miniconda3
+```
+Mas opciones de instalacion:
+https://www.anaconda.com/docs/getting-started/miniconda/install
+
+Crea y activa el entorno:
+```bash
+conda create -n adef-tools python=3.12
+conda activate adef-tools
+```
+
+Instala las dependencias principales:
+```bash
+conda install -c conda-forge gdal libgdal-arrow-parquet libgdal pip
+```
+
+---
+
+## 2. Instalando el paquete
+
+Con el entorno ya activado, instala la herramienta desde PyPI:
+
+```bash
+pip install adef-tools
+```
+
+Verifica la instalación:
+```bash
+adef-tools --help
+```
+
+## 3. Usando el paquete
+
+### Ejecución básica
+
+```bash
+adef-tools
+```
+
+### Opciones predeterminadas
+
+Si no proporcionas opciones, se usarán los siguientes valores:
+- `--vector`: Utilizá el límite HN por defecto.
 - `--confidence`: 1
 - `--out-folder`: `./results`
 - `--out-file`: `adef_intg.gpkg`
 - `--layer-name`: `alerts`
 - `--start-date` y `--end-date`: No se aplicará filtrado por fechas.
+- `--use-dask`:
 
-También puedes proporcionar tus propios valores. Por ejemplo:
-```bash
-uv run adef_intg/cli.py --confidence 2 --out-folder ./custom_results --out-file custom_output.gpkg --layer-name custom_layer --start-date 2023-01-01 --end-date 2023-12-31
-```
-
-## Uso rápido con alias o Makefile
-
-Puedes agregar un alias en tu terminal para evitar escribir el path completo:
+### Ejemplo de uso personalizado
 
 ```bash
-alias adef="uv run adef_intg/cli.py"
-```
-Luego, puedes ejecutar el proyecto con:
-```bash
-adef --confidence 2 --out-folder ./out --out-file salida.gpkg --layer-name alertas
-```
-O puedes usar un `Makefile`, se incluye un ejemplo en el proyecto. Para usarlo, asegúrate de tener `make` instalado y ejecuta:
-```bash
-make run ARGS="--confidence 2 --out-folder ./out --out-file salida.gpkg --layer-name alertas"
+adef-tools --confidence 2 --out-folder ./custom_results --out-file custom_output.gpkg --layer-name custom_layer --start-date 2023-01-01 --end-date 2023-12-31
 ```
 
 ---
 
 ## Créditos
 Desarrollado por *@lalgonzales | ICF/CIPF/UMF*
-
 
 ## Licencia
 Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.

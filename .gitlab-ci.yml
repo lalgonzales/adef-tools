@@ -4,6 +4,7 @@ stages:
   - release
   - build
   - deploy
+  - auto-bump
 
 variables:
   DOCKER_IMAGE: alpine:latest
@@ -26,7 +27,7 @@ pre-commit:
     - git config --global user.name "GitLab CI"
     - git remote set-url origin "http://project_9_bot:${ADEF_INTG_TOKEN}@git.icf.gob.hn/alopez/adef-integ-tools.git"
   script:
-    - uv venv .venv
+    - uv venv
     - source .venv/bin/activate
     - uv pip install pre-commit
     - pre-commit install
@@ -34,7 +35,7 @@ pre-commit:
     - |
       if [ -n "$CI_MERGE_REQUEST_IID" ]; then
         git diff --quiet || (git add -u && git commit -m "Auto-format with pre-commit")
-        git pull --rebase origin $CI_COMMIT_REF_NAME || true
+        # git pull --rebase origin $CI_COMMIT_REF_NAME || true
         git push origin HEAD:$CI_COMMIT_REF_NAME
       fi
   cache:
@@ -67,8 +68,6 @@ build-linux:
   stage: release
   extends: .default-tags
   image: python:3.12
-  variables:
-    PRE_COMMIT_HOME: ${CI_PROJECT_DIR}/.cache/pre-commit
   before_script:
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.local/bin:$PATH"
@@ -76,7 +75,7 @@ build-linux:
     - git config --global user.name "GitLab CI"
     - git remote set-url origin "http://project_9_bot:${ADEF_INTG_TOKEN}@git.icf.gob.hn/alopez/adef-integ-tools.git"
   script:
-    - uv venv .venv
+    - uv venv
     - source .venv/bin/activate
     - uv pip install pyinstaller
     - pyinstaller adef-intg.spec
@@ -127,10 +126,10 @@ build-windows:
   image: docker.io/python:${PYTHON_VERSION}
   before_script:
     - pip install uv
-  script:
     - uv venv
     - uv pip install .
-    - uv run python -c "import adef_intg; print('adef_intg import successful')"
+  script:
+    - uv run python -c "import adef_tools; print('adef-tools import successful')"
 
 test:matrix:
   parallel:
@@ -145,7 +144,7 @@ build_and_release:
   extends: .default-tags
   image: python:3.12
   variables:
-    PACKAGE_NAME: "adef-intg"
+    PACKAGE_NAME: "adef-tools"
     DIST_DIR: "dist"
     GITLAB_API: "https://git.icf.gob.hn/api/v4"
   before_script:
@@ -154,10 +153,10 @@ build_and_release:
     - git config --global user.email "ci-runner@gitlab.com"
     - git config --global user.name "GitLab CI"
     - git remote set-url origin "http://project_9_bot1:${TAG_CI_TOKE}@git.icf.gob.hn/alopez/adef-integ-tools.git"
-    - uv venv .venv
+    - uv venv
     - source .venv/bin/activate
   script:
-    - uv pip install -e .[build]
+    - uv pip install twine
     - uv build
 
     - |
@@ -172,28 +171,36 @@ build_and_release:
       echo "Release creation response:"
       echo "$create_response"
 
-    - |
-      for file in ${DIST_DIR}/*; do
-        echo "Uploading ${file} to project uploads..."
-        upload_response=$(curl --silent --header "PRIVATE-TOKEN: ${TAG_CI_TOKE}" \
-          --form "file=@${file}" \
-          "${GITLAB_API}/projects/${CI_PROJECT_ID}/uploads")
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
 
-        url=$(echo "$upload_response" | python -c "import sys, json; print(json.load(sys.stdin).get('url', ''))")
-        name=$(basename "${file}")
-
-        if [ -z "$url" ]; then
-          echo "Upload failed or 'url' not found. Response:"
-          echo "$upload_response"
-          exit 1
-        fi
-
-        echo "Linking ${name} to release ${TAG}"
-        curl --header "PRIVATE-TOKEN: ${TAG_CI_TOKE}" \
-          --request POST \
-          --data "name=${name}&url=${CI_PROJECT_URL}${url}" \
-          "${GITLAB_API}/projects/${CI_PROJECT_ID}/releases/${TAG}/assets/links"
-      done
+    - TWINE_USERNAME=${PYPI_USERNAME} TWINE_PASSWORD=${PYPI_PASSWORD} twine upload dist/*
   rules:
     - if: '$CI_COMMIT_TAG'
       when: always
+
+auto-bump:
+  stage: auto-bump
+  extends: .default-tags
+  image: python:3.9
+  before_script:
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="$HOME/.local/bin:$PATH"
+    - git config --global user.email "ci-runner@gitlab.com"
+    - git config --global user.name "GitLab CI"
+    - git remote set-url origin "http://project_9_bot1:${TAG_CI_TOKE}@git.icf.gob.hn/alopez/adef-integ-tools.git"
+    - uv venv
+    - source .venv/bin/activate
+    - uv pip install -U commitizen
+  script:
+    - cz bump --yes
+    - git push origin $CI_COMMIT_REF_NAME
+    - TAG=$(head -n 1 VERSION)
+    - echo "#!/bin/sh" >> variables
+    - echo "export TAG='$TAG'" >> variables
+    - git push origin $TAG
+  only:
+    refs:
+      - main
+  artifacts:
+    paths:
+      - variables

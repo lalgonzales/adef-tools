@@ -35,14 +35,11 @@ repos:
       # uv version.
       rev: 0.7.3
       hooks:
-        # - id: uv-lock
+        - id: uv-lock
         - id: uv-export
-
-    - repo: local
+    - repo: https://github.com/commitizen-tools/commitizen
+      rev: v4.7.0
       hooks:
-        - id: sync-environment-yml
-          name: Sync environment.yml with requirements.txt
-          entry: bash scripts/gen_environment.sh
-          language: system
-          files: ^requirements\.txt$
-          pass_filenames: false
+        - id: commitizen
+        - id: commitizen-branch
+          stages: [pre-push, commit-msg]
