@@ -193,7 +193,7 @@ auto-bump:
     - uv pip install -U commitizen
   script:
     - cz bump --yes
-    - git push origin $CI_COMMIT_REF_NAME
+    - git push origin HEAD:$CI_COMMIT_REF_NAME
     - TAG=$(head -n 1 VERSION)
     - echo "#!/bin/sh" >> variables
     - echo "export TAG='$TAG'" >> variables
