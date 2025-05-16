@@ -213,6 +213,10 @@ def run_adef_process(
             else:
                 gdf_exists = gpd.GeoDataFrame()
                 return
+        elif driver == "parquet":
+            gdf_exists = gpd.read_parquet(out_folder / out_file)
+        elif driver == "feather":
+            gdf_exists = gpd.read_feather(out_folder / out_file)
         else:
             gdf_exists = gpd.read_file(out_folder / out_file)
 
