@@ -98,7 +98,7 @@ def cli(
         click.echo("Operación cancelada.")
         sys.exit(0)  # Salir del programa si el usuario no confirma
 
-    base_dir = Path(__file__).resolve().parent.parent
+    base_dir = Path(out_folder_resolved).resolve().parent
 
     # Inicializar client Dask si se indica
     client = None

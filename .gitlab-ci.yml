@@ -155,6 +155,8 @@ build_and_release:
     - git remote set-url origin "http://project_9_bot1:${TAG_CI_TOKE}@git.icf.gob.hn/alopez/adef-integ-tools.git"
     - uv venv
     - source .venv/bin/activate
+  dependencies:
+    - test:matrix
   script:
     - uv pip install twine
     - uv build
