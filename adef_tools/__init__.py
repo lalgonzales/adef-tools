@@ -2,7 +2,7 @@
 
 __author__ = "Luis Alfredo López Gonzales"
 __email__ = "lalgonzales@gmail.com"
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 
 from .adef_intg_fn import run_adef_process
 from .utils_adef import (
