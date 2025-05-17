@@ -80,6 +80,7 @@ version_files = [
     "pyproject.toml",
     "uv.lock"
 ]
+bump_message = "release $current_version → $new_version [skip-ci]"
 
 [dependency-groups]
 build = [
