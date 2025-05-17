@@ -1,4 +1,4 @@
-# adef_intg.spec
+# adef-tools.spec
 from PyInstaller.utils.hooks import collect_submodules
 from pathlib import Path
 
@@ -22,7 +22,6 @@ a = Analysis(
     hookspath=[],
     runtime_hooks=[],
     excludes=["docs", "data", "results"],
-    adicionales
 )
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
@@ -32,7 +31,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name="adef-intg",
+    name="adef-tools",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -48,5 +47,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name="adef-intg",
+    name="adef-tools",
 )

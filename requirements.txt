@@ -1280,7 +1280,9 @@ wcmatch==10.0 \
 wcwidth==0.2.13 \
     --hash=sha256:3da69048e4540d84af32131829ff948f1e022c1c6bdb8d6102117aac784f6859 \
     --hash=sha256:72ea0c06399eb286d978fdedb6923a9eb47e1c486ce63e9b4e64fc18303972b5
-    # via prompt-toolkit
+    # via
+    #   adef-tools
+    #   prompt-toolkit
 xarray==2025.4.0 \
     --hash=sha256:2a89cd6a1dfd589aa90ac45f4e483246f31fc641836db45dd2790bb78bd333dc \
     --hash=sha256:b27defd082c5cb85d32c695708de6bb05c2838fb7caaf3f952982e602a35b9b8
