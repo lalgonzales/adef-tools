@@ -1,3 +1,10 @@
+## v0.2.2 (2025-05-17)
+
+### Refactor
+
+- remove unused imports from adef_intg_fn.py
+- **cli**: derive base_dir from out_folder instead of __file__
+
 ## v0.2.1 (2025-05-16)
 
 ### Fix
