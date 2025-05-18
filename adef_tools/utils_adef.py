@@ -341,6 +341,8 @@ def filter_adef_intg_conf(
         adef_intg_conf.name = tif_name
         if tif_out is not None:
             tif_out_name = os.path.basename(tif_out).split(".")[:-1][0]
+            dir_out = os.path.dirname(tif_out)
+            os.makedirs(dir_out, exist_ok=True)
             adef_intg_conf.rio.to_raster(
                 tif_out,
                 tiled=True,
