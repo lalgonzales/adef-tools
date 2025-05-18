@@ -1,3 +1,10 @@
+## v0.2.4 (2025-05-18)
+
+### Fix
+
+- **filter_adef_intg_conf**: Ensure output directory exists before writing raste
+- force wcwidth==0.2.13
+
 ## v0.2.3 (2025-05-17)
 
 ### Fix
