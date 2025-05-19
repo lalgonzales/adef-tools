@@ -1,3 +1,10 @@
+## v0.2.5 (2025-05-19)
+
+### Refactor
+
+- **utils_adef.py**: use subprocess.run instead of os.system for GDAL...
+- **utils_adef.py**: use subprocess.run instead of os.system for GDAL commands and fix TIF attribute checks
+
 ## v0.2.4 (2025-05-18)
 
 ### Fix
