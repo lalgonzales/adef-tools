@@ -586,7 +586,8 @@ def tif_to_vector(tif, out_folder, out_file="vector.gpkg", layer_name=None):
     polygonize_path = get_gdal_polygonize_path()
     print(f"using {polygonize_path} to convert the raster to vector")
     command = (
-        [polygonize_path]
+        ["python"]
+        + [polygonize_path]
         + [tif]
         + [out_vector]
         + [layer_name]
@@ -595,7 +596,14 @@ def tif_to_vector(tif, out_folder, out_file="vector.gpkg", layer_name=None):
         + ["-overwrite"]
         + ["-mask", tif]
     )
-    subprocess.run(command, check=True)
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error running gdal_polygonize for {tif_name}: {e}")
+        raise
+    except Exception as e:
+        print(f"Unexpected error while running gdal_polygonize for {tif_name}: {e}")
+        raise
     print(f"Vector file saved as {out_file} in {out_folder}")
 
 
