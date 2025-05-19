@@ -1,3 +1,9 @@
+## v0.2.6 (2025-05-19)
+
+### Refactor
+
+- **utils**: run gdal_polygonize.py with python
+
 ## v0.2.5 (2025-05-19)
 
 ### Refactor

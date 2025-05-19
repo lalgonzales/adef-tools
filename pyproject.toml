@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "adef-tools"
-version = "0.2.5"
+version = "0.2.6"
 description = "Script to work with Integrated Alert Deforestacion"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -72,7 +72,7 @@ max-line-length = 88
 name = "cz_conventional_commits"
 tag_format = "v$version"
 version_scheme = "pep440"
-version = "0.2.5"
+version = "0.2.6"
 update_changelog_on_bump = true
 major_version_zero = true
 version_files = [
