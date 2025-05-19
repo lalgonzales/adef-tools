@@ -3,6 +3,7 @@
 import os
 import sys
 import platform
+import subprocess
 import glob
 import shutil
 import threading
@@ -160,13 +161,13 @@ def check_tif_attr(
     if os.path.exists(tif_matched):
         tif_adjusted, tif_adjusted_name = validate_setting_tif(tif_matched)
         try:
-            crs_test = tif_adjusted.rio.crs == tif_to_adjusd.rio.crs
+            crs_test = tif_adjusted.rio.crs == tif_reference.rio.crs
             transform_test = (
-                tif_adjusted.rio.transform() == tif_to_adjusd.rio.transform()
+                tif_adjusted.rio.transform() == tif_reference.rio.transform()
             )
-            bounds_test = tif_adjusted.rio.bounds() == tif_to_adjusd.rio.bounds()
+            bounds_test = tif_adjusted.rio.bounds() == tif_reference.rio.bounds()
             resolution_test = (
-                tif_adjusted.rio.resolution() == tif_to_adjusd.rio.resolution()
+                tif_adjusted.rio.resolution() == tif_reference.rio.resolution()
             )
             if crs_test and transform_test and bounds_test and resolution_test:
                 print(
@@ -222,7 +223,7 @@ def adjust_tif(tif_no_adjust, tif_reference, tif_out, chunks="auto"):
     tif_ref, tif_ref_name = validate_setting_tif(tif_reference)
 
     # Check the attributes of the rasters file
-    result = check_tif_attr(tif_to_adjust, tif_reference, tif_out, chunks=chunks)
+    result = check_tif_attr(tif_to_adjust, tif_ref, tif_out, chunks=chunks)
     if result is None:
         return
 
@@ -232,22 +233,25 @@ def adjust_tif(tif_no_adjust, tif_reference, tif_out, chunks="auto"):
         xmin, ymin, xmax, ymax = tif_ref.rio.bounds()
         gdalwarp_path = get_gdalwarp_path()
         gdal_adjust = (
-            f"{gdalwarp_path} "
-            f"-t_srs {tif_ref.rio.crs} "
-            f"-overwrite "
-            f"-te  {xmin} {ymin} {xmax} {ymax} "
-            f"-tr {tif_ref.rio.resolution()[0]} {tif_ref.rio.resolution()[1]} "
-            f"-r bilinear "
-            f"-multi "
-            f"-wo NUM_THREADS=ALL_CPUS "
-            f"-srcnodata 0 "
-            f"-dstnodata 0 "
-            f"-co COMPRESS=DEFLATE "
-            f"-co TILED=YES "
-            f"{tif_no_adjust} "
-            f"{tif_out}"
+            [gdalwarp_path]
+            + ["-t_srs", str(tif_ref.rio.crs)]
+            + ["-overwrite"]
+            + ["-te", str(xmin), str(ymin), str(xmax), str(ymax)]
+            + [
+                "-tr",
+                str(tif_ref.rio.resolution()[0]),
+                str(tif_ref.rio.resolution()[1]),
+            ]
+            + ["-r", "bilinear"]
+            + ["-multi"]
+            + ["-wo", "NUM_THREADS=ALL_CPUS"]
+            + ["-srcnodata", "0"]
+            + ["-dstnodata", "0"]
+            + ["-co", "COMPRESS=DEFLATE"]
+            + ["-co", "TILED=YES"]
+            + [tif_no_adjust, tif_out]
         )
-        os.system(gdal_adjust)
+        subprocess.run(gdal_adjust, check=True)
         tif_out_name = os.path.basename(tif_out).split(".")[:-1][0]
         print(f"Raster ajustado y guardado en {tif_out_name}")
         return
@@ -410,11 +414,6 @@ def mask_adef_hn_by_forest(
         raise FileNotFoundError(
             f"The forest TIF file does not exist: {tif_forest24_name}"
         )
-
-    # if not os.path.exists(tif_adef_hn):
-    #     raise FileNotFoundError(
-    #         f"The ADEF_HN TIF file does not exist: {tif_adef_hn_name}"
-    #     )
 
     try:
         # Filtrar las alertas de los años 2014, 2018, 2024
@@ -587,18 +586,16 @@ def tif_to_vector(tif, out_folder, out_file="vector.gpkg", layer_name=None):
     polygonize_path = get_gdal_polygonize_path()
     print(f"using {polygonize_path} to convert the raster to vector")
     command = (
-        f"{polygonize_path} "
-        f"{tif} "
-        f"{out_vector} "
-        f"{layer_name} 'value' "
-        f"-of {driver} "
-        f"-overwrite "
-        f"-mask {tif} "
+        [polygonize_path]
+        + [tif]
+        + [out_vector]
+        + [layer_name]
+        + ["value"]
+        + ["-of", driver]
+        + ["-overwrite"]
+        + ["-mask", tif]
     )
-    try:
-        os.system(command)
-    except:
-        raise
+    subprocess.run(command, check=True)
     print(f"Vector file saved as {out_file} in {out_folder}")
 
 
@@ -817,7 +814,13 @@ def get_wfs_layer(wfs_url, layer_name, version="1.0.0"):
     Returns:
         gpd.GeoDataFrame: A GeoDataFrame containing the data from the specified layer, or None if an error occurs.
     """
-    wfs = WebFeatureService(wfs_url, version=version)
+
+    try:
+        wfs = WebFeatureService(wfs_url, version=version)
+    except Exception as e:
+        print(f"Error: Unable to connect to WFS service at {wfs_url}")
+        print(f"Exception: {e}")
+        raise
 
     try:
         # Get the list of available layers
@@ -1154,7 +1157,7 @@ def mask_by_forest(
 
 
 def clip_tif_gdal(
-    tif, roi_clip, tif_out, extend=True, chunks="auto", lock_read=True, **vector_kwargs
+    tif, roi_clip, tif_out, chunks="auto", lock_read=True, **vector_kwargs
 ):
     """
     Clips a raster file (TIF) using GDAL's gdalwarp utility and a vector file or GeoDataFrame as the cutline.
@@ -1191,26 +1194,29 @@ def clip_tif_gdal(
         data_clip = data_clip.to_crs("EPSG:4326")
     ext = data_clip.total_bounds
     print(f"Using {gdal_warp_path} to clip the TIF")
-    cmd = (
-        f"{gdal_warp_path} "
-        f"-overwrite "
-        f"-t_srs EPSG:4326 "
-        f"-te {ext[0]} {ext[1]} {ext[2]} {ext[3]} "
-        f"-tr {xres} {yres} "
-        f"-srcnodata 0 "
-        f"-dstnodata 0 "
-        f"-co TILED=YES "
-        f"-co COMPRESS=DEFLATE "
-        f"-wo NUM_THREADS=ALL_CPUS "
-        f"-multi "
-        f"-ot uint16 "
-        f"{tif} "
-        f"{tif_out}"
+    command = (
+        [gdal_warp_path]
+        + ["-overwrite"]
+        + ["-t_srs", "EPSG:4326"]
+        + ["-te", str(ext[0]), str(ext[1]), str(ext[2]), str(ext[3])]
+        + ["-tr", str(xres), str(yres)]
+        + ["-srcnodata", "0"]
+        + ["-dstnodata", "0"]
+        + ["-co", "TILED=YES"]
+        + ["-co", "COMPRESS=DEFLATE"]
+        + ["-wo", "NUM_THREADS=ALL_CPUS"]
+        + ["-multi"]
+        + ["-ot", "uint16"]
+        + [tif]
+        + [tif_out]
     )
     try:
-        os.system(cmd)
-    except:
-        print(f"Error clipping {tif_name} with {roi_clip}")
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error running gdalwarp to clip {tif_name}: {e}")
+        raise
+    except Exception as e:
+        print(f"Unexpected error while clipping {tif_name}: {e}")
         raise
     print(f"Clipped {tif_name} saved as {tif_out}")
     return None
