@@ -1,38 +1,50 @@
-# Python-generated files
+# Python
 __pycache__/
-*.py[oc]
+*.py[ocd]
+*$py.class
+
+# Build
 build/
 dist/
 wheels/
 *.egg-info
-*.py[cod]
-*$py.class
 
 # Virtual environments
-.venv
+.venv/
 venv/
 env/
 .env/
 .conda/
-data/adef_intg_hn.tif
-Archive.zip
-**match.tif
-**.aux.xml
 
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints
-
-# VS Code settings
-.vscode/
+# Data (ignora todo menos los archivos clave)
+data/*
+!data/bosque14_lzw.tif
+!data/bosque18_lzw.tif
+!data/bosque24_lzw.tif
+!data/phid_hn.tif
 
 # Results
-/results
+**/results/
+
+# Archivos temporales y logs
+*.log
+*.tmp
+*.bak
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
 
 # C extensions
 *.so
 
-# Data
-data/
-!data/bosque14_lzw.tif
-!data/bosque18_lzw.tif
-!data/bosque24_lzw.tif
+# Archivos de configuración sensibles
+*.env
+config.yaml
+
+# Chore
+private/
+Archive.zip
+**.aux.xml
