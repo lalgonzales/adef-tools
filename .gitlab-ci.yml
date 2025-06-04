@@ -194,6 +194,9 @@ auto-bump:
     - uv venv
     - source .venv/bin/activate
     - uv pip install -U commitizen
+    - uv pip install -U cz-changeup
+  dependencies:
+    - test:matrix
   script:
     - |
       set -e

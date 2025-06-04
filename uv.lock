@@ -37,6 +37,7 @@ deploy = [
 ]
 dev = [
     { name = "commitizen" },
+    { name = "cz-changeup" },
     { name = "pip" },
     { name = "pre-commit" },
 ]
@@ -71,6 +72,7 @@ build = [
 deploy = [{ name = "twine", specifier = ">=6.1.0" }]
 dev = [
     { name = "commitizen", specifier = ">=4.7.0" },
+    { name = "cz-changeup", specifier = ">=1.1.2" },
     { name = "pip", specifier = ">=25.1.1" },
     { name = "pre-commit", specifier = ">=4.2.0" },
 ]
@@ -611,6 +613,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a9/95/a3dbbb5028f35eafb79008e7522a75244477d2838f38cbb722248dabc2a8/cycler-0.12.1.tar.gz", hash = "sha256:88bb128f02ba341da8ef447245a9e138fae777f6a23943da4540077d3601eb1c", size = 7615, upload-time = "2023-10-07T05:32:18.335Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e7/05/c19819d5e3d95294a6f5947fb9b9629efb316b96de511b418c53d245aae6/cycler-0.12.1-py3-none-any.whl", hash = "sha256:85cef7cff222d8644161529808465972e51340599459b8ac3ccbac5a854e0d30", size = 8321, upload-time = "2023-10-07T05:32:16.783Z" },
+]
+
+[[package]]
+name = "cz-changeup"
+version = "1.1.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "commitizen" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/19/54/e98511cf11c4a12268a13f28714227b510d1f166e44f5cd2fd234e9297ab/cz_changeup-1.1.2.tar.gz", hash = "sha256:f3876c32b558cb6e15a9bf8b69b7de840e90a79c0f4765439f4a9f13d4e004f2", size = 8513, upload-time = "2024-12-18T01:55:00.462Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9f/38/170eab7c366e42df418486172d136b209b5208f5c04d2008d1be9b27d261/cz_changeup-1.1.2-py3-none-any.whl", hash = "sha256:938a3715cfc248e824b2ac5985b94a0cd1c505d201d8d67289fd1005e8465ec3", size = 5551, upload-time = "2024-12-18T01:54:59.064Z" },
 ]
 
 [[package]]
@@ -1956,14 +1970,14 @@ wheels = [
 
 [[package]]
 name = "notebook-shim"
-version = "0.2.6"
+version = "0.2.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jupyter-server" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/54/d2/92fa3243712b9a3e8bafaf60aac366da1cada3639ca767ff4b5b3654ec28/notebook_shim-0.2.6.tar.gz", hash = "sha256:b4b2cfa1b65d98307ca24361f5b30fe785b53c3fd07b7a47e89acb5e6ac638cb", size = 13167, upload-time = "2024-02-14T23:35:18.353Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/54/d2/92fa3243712b9a3e8bafaf60aac366da1cada3639ca767ff4b5b3654ec28/notebook_shim-0.2.4.tar.gz", hash = "sha256:b4b2cfa1b65d98307ca24361f5b30fe785b53c3fd07b7a47e89acb5e6ac638cb", size = 13167, upload-time = "2024-02-14T23:35:18.353Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f9/33/bd5b9137445ea4b680023eb0469b2bb969d61303dedb2aac6560ff3d14a1/notebook_shim-0.2.6-py3-none-any.whl", hash = "sha256:411a5be4e9dc882a074ccbcae671eda64cceb068767e9a3419096986560e1cef", size = 13307, upload-time = "2024-02-14T23:35:16.286Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/33/bd5b9137445ea4b680023eb0469b2bb969d61303dedb2aac6560ff3d14a1/notebook_shim-0.2.4-py3-none-any.whl", hash = "sha256:411a5be4e9dc882a074ccbcae671eda64cceb068767e9a3419096986560e1cef", size = 13307, upload-time = "2024-02-14T23:35:16.286Z" },
 ]
 
 [[package]]
