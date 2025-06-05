@@ -1,3 +1,33 @@
+## v0.4.1 (2025-06-05)
+
+### Refactor
+
+- raster: clean up imports and improve error handling
+
+  ### Refactor
+
+  - raster: clean up imports and improve error handling
+
+  - 【Imports】: Removed unnecessary imports like `threading` and `tqdm`.
+
+  - 【Error Handling】: Improved error handling in `dw_tif` to catch specific
+
+  request exceptions and raise a `RuntimeError` after retries.
+
+  - 【Code Optimization】: Aligned bounding box to raster grid in
+
+  `clip_tif_ext_gdal` to ensure proper clipping.
+
+  ### Perf
+
+  - adef_hn: integrate config file loading
+
+  - load configurations from a yaml file to allow for customizable workflow settings
+
+  - handle cases where the configuration file is missing by using default values
+
+  See merge request alopez/adef-tools!14
+
 ## v0.4.0 (2025-06-05)
 
 ### Feat
