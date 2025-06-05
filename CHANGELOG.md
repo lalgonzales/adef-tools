@@ -1,3 +1,17 @@
+## v0.4.0 (2025-06-05)
+
+### Feat
+
+- adef_hn: first step for workflows to process Integrated Alerts
+
+  - add main workflow script (adef_workflow.py)
+
+  - implement configuration class (config.py)
+
+  - add main entry point (main.py)
+
+  See merge request alopez/adef-tools!13
+
 ## v0.3.0 (2025-06-05)
 
 ### Feat
