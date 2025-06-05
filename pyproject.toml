@@ -83,6 +83,29 @@ version_files = [
     "uv.lock"
 ]
 
+[tool.commitizen.changeup]
+types = [
+  { type = "feat", description = "A new feature" },
+  { type = "fix", description = "A bug fix" },
+  { type = "perf", description = "A performance improvement" },
+  { type = "refactor", description = "Code changes that neither fix a bug nor add a feature" },
+  { type = "docs", description = "Documentation only changes" },
+  { type = "style", description = "Changes that do not affect the meaning of the code" },
+  { type = "test", description = "Adding or updating tests" },
+  { type = "chore", description = "Other changes that don't modify src or tests" },
+  { type = "build", description = "Changes that affect the build system or external dependencies" },
+  { type = "ci", description = "Changes to CI configuration files and scripts" },
+  { type = "revert", description = "Reverts a previous commit" }
+]
+
+bump_map = [
+  { type = "feat", bump = "minor" },
+  { type = "fix", bump = "patch" },
+  { type = "perf", bump = "patch" },
+  { type = "refactor", bump = "patch" }
+]
+
+
 [dependency-groups]
 build = [
     "fiona>=1.10.1",

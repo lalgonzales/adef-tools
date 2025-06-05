@@ -17,12 +17,7 @@ env/
 .conda/
 
 # Data (ignora todo menos los archivos clave)
-data/*
-!data/bosque14_lzw.tif
-!data/bosque18_lzw.tif
-!data/bosque24_lzw.tif
-!data/phid_hn.tif
-
+**_match*
 # Results
 **/results/
 

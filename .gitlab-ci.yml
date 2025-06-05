@@ -9,6 +9,7 @@ stages:
 variables:
   DOCKER_IMAGE: alpine:latest
   UV_LINK_MODE: copy
+  GIT_DEPTH: 0
 
 .default-tags:
   tags:
@@ -25,7 +26,7 @@ pre-commit:
     - export PATH="$HOME/.local/bin:$PATH"
     - git config --global user.email "ci-runner@gitlab.com"
     - git config --global user.name "GitLab CI"
-    - git remote set-url origin "http://project_9_bot:${ADEF_INTG_TOKEN}@git.icf.gob.hn/alopez/adef-integ-tools.git"
+    - git remote set-url origin "http://project_9_bot:${ADEF_INTG_TOKEN}@git.icf.gob.hn/alopez/adef-tools.git"
   script:
     - uv venv
     - source .venv/bin/activate
@@ -73,7 +74,7 @@ build-linux:
     - export PATH="$HOME/.local/bin:$PATH"
     - git config --global user.email "ci-runner@gitlab.com"
     - git config --global user.name "GitLab CI"
-    - git remote set-url origin "http://project_9_bot:${ADEF_INTG_TOKEN}@git.icf.gob.hn/alopez/adef-integ-tools.git"
+    - git remote set-url origin "http://project_9_bot:${CI_TAG_REL_TOKEN}@git.icf.gob.hn/alopez/adef-tools.git"
   script:
     - uv venv
     - source .venv/bin/activate
@@ -83,7 +84,7 @@ build-linux:
     - echo "🚀 Subiendo binario como asset al release de GitLab..."
     - |
       curl --silent --fail --request POST "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links" \
-        --header "PRIVATE-TOKEN: ${ADEF_INTG_TOKEN}" \
+        --header "PRIVATE-TOKEN: ${CI_TAG_REL_TOKEN}" \
         --form "name=adef-intg Linux Binary" \
         --form "url=$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/file/dist/adef-tools/adef-tools"
   artifacts:
@@ -91,7 +92,7 @@ build-linux:
       - dist/adef-tools/adef-tools
     expire_in: 1 week
   rules:
-    - if: '$CI_COMMIT_TAG && $CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_TAG'
 
 # build-windows:
 #   stage: build
@@ -127,7 +128,7 @@ build-linux:
   before_script:
     - pip install uv
     - uv venv
-    - uv pip install .
+    # - uv pip install .
   script:
     - uv run python -c "import adef_tools; print('adef-tools import successful')"
 
@@ -153,7 +154,7 @@ build_and_release:
     - export PATH="$HOME/.local/bin:$PATH"
     - git config --global user.email "ci-runner@gitlab.com"
     - git config --global user.name "GitLab CI"
-    - git remote set-url origin "http://project_9_bot1:${TAG_CI_TOKE}@git.icf.gob.hn/alopez/adef-integ-tools.git"
+    - git remote set-url origin "http://project_9_bot:${CI_TAG_REL_TOKEN}@git.icf.gob.hn/alopez/adef-tools.git"
     - uv venv
     - source .venv/bin/activate
   dependencies:
@@ -166,7 +167,7 @@ build_and_release:
       TAG="${CI_COMMIT_TAG}"
       RELEASE_NAME="Release ${TAG}"
       echo "Creating or updating release ${TAG}"
-      create_response=$(curl --silent --header "PRIVATE-TOKEN: ${TAG_CI_TOKE}" \
+      create_response=$(curl --silent --header "PRIVATE-TOKEN: ${CI_TAG_REL_TOKEN}" \
         --request POST \
         --data "name=${RELEASE_NAME}&tag_name=${TAG}&description=Automated release for ${PACKAGE_NAME} ${TAG}" \
         "${GITLAB_API}/projects/${CI_PROJECT_ID}/releases")
@@ -190,7 +191,7 @@ auto-bump:
     - export PATH="$HOME/.local/bin:$PATH"
     - git config --global user.email "ci-runner@gitlab.com"
     - git config --global user.name "GitLab CI"
-    - git remote set-url origin "http://project_9_bot1:${TAG_CI_TOKE}@git.icf.gob.hn/alopez/adef-integ-tools.git"
+    - git remote set-url origin "http://project_9_bot:${CI_TAG_REL_TOKEN}@git.icf.gob.hn/alopez/adef-tools.git"
     - uv venv
     - source .venv/bin/activate
     - uv pip install -U commitizen
