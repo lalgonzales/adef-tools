@@ -5,12 +5,16 @@ import sys
 import subprocess
 import pathlib
 import platform
+import time
 import shutil
 import requests
+import threading
+from tqdm import tqdm
 import pandas as pd
-import rioxarray as rxr
+import geopandas as gpd
 import xarray as xr
-import time
+import rioxarray as rxr
+import numpy as np
 
 
 def get_safe_lock(name="rio", client=None):
@@ -37,8 +41,6 @@ def get_safe_lock(name="rio", client=None):
                 pass  # No client available
     except ImportError:
         pass
-
-    import threading
 
     return threading.Lock()
 
@@ -155,13 +157,15 @@ def dw_tif(url, tif_out, timeout=10, retries=3, delay=3):
             requests.exceptions.ConnectionError,
         ) as err:
             print(f"Error de conexión o HTTP: {err}")
-        except Exception as e:
-            print(f"Ocurrió un error: {e}")
+        except requests.exceptions.RequestException as e:
+            print(f"Ocurrió un error de red: {e}")
         attempt += 1
         if attempt < retries:
             print(f"Reintentando en {delay} segundos...")
             time.sleep(delay)
-    raise Exception(f"No se pudo descargar el archivo después de {retries} intentos.")
+    raise RuntimeError(
+        f"No se pudo descargar el archivo después de {retries} intentos."
+    )
 
 
 def validate_setting_tif(tif, **rxr_kwargs):
@@ -218,13 +222,11 @@ def clip_tif_ext_gdal(tif, roi_clip, tif_out, rxr_kwargs=None, gpd_kwargs=None):
     Returns:
         str: Path to the output clipped TIF file.
     """
-    import geopandas as gpd
 
     rxr_kwargs = rxr_kwargs or {}
     gpd_kwargs = gpd_kwargs or {}
 
     tif_data, tif_name = validate_setting_tif(tif, **rxr_kwargs)
-    xres, yres = tif_data.rio.resolution()
 
     # Validate the input vector file
     if isinstance(roi_clip, (str, pathlib.Path)) and os.path.exists(roi_clip):
@@ -235,14 +237,28 @@ def clip_tif_ext_gdal(tif, roi_clip, tif_out, rxr_kwargs=None, gpd_kwargs=None):
         raise TypeError("The vector must be a file path or a GeoDataFrame.")
 
     gdal_warp_path = get_gdalwarp_path()
-    if data_clip.crs != "EPSG:4326":
-        data_clip = data_clip.to_crs("EPSG:4326")
-    ext = data_clip.total_bounds
+    if data_clip.crs != tif_data.rio.crs:
+        data_clip = data_clip.to_crs(tif_data.rio.crs)
+
+    # Bounding box del vector (sin alinear)
+    ext_raw = data_clip.total_bounds
+
+    # Alinear el bounding box al grid del raster
+    x0, y0 = tif_data.rio.transform()[2], tif_data.rio.transform()[5]
+    xres, yres = tif_data.rio.resolution()
+    xmin, ymin, xmax, ymax = ext_raw
+
+    xmin_aligned = x0 + np.floor((xmin - x0) / xres) * xres
+    xmax_aligned = x0 + np.ceil((xmax - x0) / xres) * xres
+    ymin_aligned = y0 + np.floor((ymin - y0) / yres) * yres
+    ymax_aligned = y0 + np.ceil((ymax - y0) / yres) * yres
+
+    ext = (xmin_aligned, ymin_aligned, xmax_aligned, ymax_aligned)
+
     print(f"Using {gdal_warp_path} to clip the TIF")
     command = (
         [gdal_warp_path]
         + ["-overwrite"]
-        + ["-t_srs", "EPSG:4326"]
         + ["-te", str(ext[0]), str(ext[1]), str(ext[2]), str(ext[3])]
         + ["-tr", str(xres), str(yres)]
         + ["-srcnodata", "0"]
@@ -251,7 +267,6 @@ def clip_tif_ext_gdal(tif, roi_clip, tif_out, rxr_kwargs=None, gpd_kwargs=None):
         + ["-co", "COMPRESS=DEFLATE"]
         + ["-wo", "NUM_THREADS=ALL_CPUS"]
         + ["-multi"]
-        + ["-ot", "uint16"]
         + [tif]
         + [tif_out]
     )
@@ -280,8 +295,6 @@ def clip_tif_ext_rxr(tif, vector, out_tif=None, **rxr_kwargs):
     Returns:
         xr.DataArray or None: The clipped raster as an xarray DataArray if out_tif is None, otherwise None.
     """
-    import threading
-    import geopandas as gpd
 
     tif, tif_name = validate_setting_tif(tif, **rxr_kwargs)
 
@@ -523,9 +536,6 @@ def divide_intg_for_forest(
     Returns:
         dict: Dictionary of {period_name: xarray.DataArray}
     """
-    import threading
-    from tqdm import tqdm
-    import pandas as pd
 
     # Validate and create array data
     tif_data, tif_name = validate_setting_tif(tif_intg, **rxr_kwargs)
@@ -570,8 +580,6 @@ def set_forest_data(out_data):
     Args:
         out_data (str): Directory where the forest mask TIF files will be saved.
     """
-    import time
-
     out_data = str(out_data)
 
     os.makedirs(out_data, exist_ok=True)
@@ -627,8 +635,6 @@ def mask_adefintg_forest(
     Returns:
         str or xarray.DataArray: Path to the saved masked raster if out_file is provided, otherwise the masked raster as an xarray DataArray.
     """
-    import time
-
     periods = [
         ("2014-01-01", "2017-12-31"),
         ("2018-01-01", "2023-12-31"),
