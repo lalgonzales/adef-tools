@@ -1,3 +1,109 @@
+## v0.3.0 (2025-06-05)
+
+### Feat
+
+- build: migrate to cz-changeup for commitizen
+
+  - migrate from cz_conventional_commits to cz-changeup
+
+  - update pyproject.toml, requirements.txt, and uv.lock files
+
+- add ADEFINTG class and refactor functions
+
+  - adef_fn: add ADEFINTG class with methods for download, clip, mask, filter, and phid
+
+  Implemented the ADEFINTG class in adef_fn.py, including methods for downloading alerts data,
+
+  clipping rasters, masking by forest cover, filtering by confidence and date range, and adding PHID.
+
+  This provides a high-level interface for common alert raster processing workflows.
+
+  - utils: modularize utils by moving raster and vector functions into dedicated modules
+
+  - Moved raster-related functions from utils_adef.py to raster.py
+
+  - Moved vector-related functions from utils_adef.py to vector.py
+
+  - Adapted internal logic and imports to reflect the modular split
+
+  - Reduced utils_adef.py to shared functions and WFS utilities only
+
+  - workflows: move data files to workflows/data and remove unused notebook
+
+  Data files bosque*_lzw.tif and phid_hn.tif were moved from data/ to workflows/data/
+
+  to better organize workflow-specific resources. The old notebook adef_intg.ipynb was
+
+  removed as it is no longer needed.
+
+  See merge request alopez/adef-tools!12
+
+### Fix
+
+- filter_adef_intg_conf: Ensure output directory exists before writing raste
+
+  See merge request alopez/adef-integ-tools!9
+
+- force wcwidth==0.2.13
+
+  cz bump forced the lib to 0.2.23 breaking the installation of rasterio
+
+  See merge request alopez/adef-integ-tools!7
+
+- update function call to handle additional parameter in run_adef_process
+
+- update function call to handle additional parameter in run_adef_process
+
+### Refactor
+
+- utils: run gdal_polygonize.py with python
+
+  - Execute gdal_polygonize.py using python for compatibility.
+
+  - Add exception handling for subprocess errors.
+
+- utils_adef.py: use subprocess.run instead of os.system for GDAL...
+
+  refactor(utils_adef.py): use subprocess.run instead of os.system for GDAL commands and fix TIF attribute checks
+
+  - Replace os.system with subprocess.run for executing GDAL-related commands, improving error handling and security.
+
+  - Fix TIF attribute comparisons to use tif_reference instead of tif_to_adjusd.
+
+  - Add better exception handling for WFS connection and GDAL operations.
+
+  - Minor code cleanups and improved robustness in raster/vector processing utilities.
+
+  See merge request alopez/adef-integ-tools!11
+
+- utils_adef.py: use subprocess.run instead of os.system for GDAL commands and fix TIF attribute checks
+
+  refactor(utils_adef.py): use subprocess.run instead of os.system for GDAL commands and fix TIF attribute checks
+
+  - Replace os.system with subprocess.run for executing GDAL-related commands, improving error handling and security.
+
+  - Fix TIF attribute comparisons to use tif_reference instead of tif_to_adjusd.
+
+  - Add better exception handling for WFS connection and GDAL operations.
+
+  - Minor code cleanups and improved robustness in raster/vector processing utilities.
+
+  See merge request alopez/adef-integ-tools!11
+
+- remove unused imports from adef_intg_fn.py
+
+  See merge request alopez/adef-integ-tools!6
+
+- cli: derive base_dir from out_folder instead of __file__
+
+  This change replaces the hardcoded relative path with a path
+
+  based on the resolved output folder, improving flexibility
+
+  and making the tool more robust in different environments.
+
+  See merge request alopez/adef-integ-tools!5
+
 ## v0.2.6 (2025-05-19)
 
 ### Refactor
