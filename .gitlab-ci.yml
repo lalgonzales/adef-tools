@@ -65,62 +65,6 @@ container_scanning:
 secret_detection:
   tags: [docker-runner]
 
-build-linux:
-  stage: build
-  extends: .default-tags
-  image: docker.io/python:3.12
-  before_script:
-    - curl -LsSf https://astral.sh/uv/install.sh | sh
-    - export PATH="$HOME/.local/bin:$PATH"
-    - git config --global user.email "ci-runner@gitlab.com"
-    - git config --global user.name "GitLab CI"
-    - git remote set-url origin "http://project_9_bot:${CI_TAG_REL_TOKEN}@git.icf.gob.hn/alopez/adef-tools.git"
-  script:
-    - uv venv
-    - source .venv/bin/activate
-    - uv pip install pyinstaller
-    - pyinstaller adef-tools.spec
-    - if [ ! -f dist/adef-tools/adef-tools ]; then echo "Binario no encontrado"; exit 1; fi
-    - echo "🚀 Subiendo binario como asset al release de GitLab..."
-    - |
-      curl --silent --fail --request POST "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links" \
-        --header "PRIVATE-TOKEN: ${CI_TAG_REL_TOKEN}" \
-        --form "name=adef-intg Linux Binary" \
-        --form "url=$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/file/dist/adef-tools/adef-tools"
-  artifacts:
-    paths:
-      - dist/adef-tools/adef-tools
-    expire_in: 1 week
-  rules:
-    - if: '$CI_COMMIT_TAG'
-
-# build-windows:
-#   stage: build
-#   extends: .default-tags
-#   image: cibuilds/wine:latest
-#   script:
-#     - apt-get update && apt-get install -y python3 python3-pip
-#     - python3 -m pip install --upgrade pip
-#     - python3 -m pip install uv
-#     - uv pip install -r requirements.txt
-#     - uv pip install pyinstaller
-#     - pyinstaller adef-tools.spec --onefile --distpath dist/windows
-#     - echo "📁 Validando binario generado..."
-#     - test -f dist/windows/adef-intg.exe || (echo "❌ Binario no encontrado"; exit 1)
-
-#     - echo "🚀 Subiendo como asset a la Release..."
-#     - |
-#       curl --silent --fail --request POST "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links" \
-#         --header "PRIVATE-TOKEN: ${CI_TAG_REL_TOKEN}" \
-#         --form "name=adef-intg Windows Binary" \
-#         --form "url=$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/file/dist/windows/adef-tools.exe"
-#   artifacts:
-#     paths:
-#       - dist/windows/adef-tools.exe
-#     expire_in: 1 week
-#   rules:
-#     - if: '$CI_COMMIT_TAG'
-
 .test-template: &test-template
   stage: test
   extends: .default-tags
@@ -141,7 +85,7 @@ test:matrix:
       - PYTHON_VERSION: "3.13"
   <<: *test-template
 
-build_and_release:
+upload_twine:
   stage: deploy
   extends: .default-tags
   image: python:3.12
@@ -162,18 +106,6 @@ build_and_release:
   script:
     - uv pip install twine
     - uv build
-
-    - |
-      TAG="${CI_COMMIT_TAG}"
-      RELEASE_NAME="Release ${TAG}"
-      echo "Creating or updating release ${TAG}"
-      create_response=$(curl --silent --header "PRIVATE-TOKEN: ${CI_TAG_REL_TOKEN}" \
-        --request POST \
-        --data "name=${RELEASE_NAME}&tag_name=${TAG}&description=Automated release for ${PACKAGE_NAME} ${TAG}" \
-        "${GITLAB_API}/projects/${CI_PROJECT_ID}/releases")
-
-      echo "Release creation response:"
-      echo "$create_response"
 
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
 
@@ -222,3 +154,24 @@ auto-bump:
   artifacts:
     paths:
       - variables
+
+sync_to_github:
+  stage: deploy
+  extends: .default-tags
+  image: docker.io/python:3.12
+  before_script:
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="$HOME/.local/bin:$PATH"
+    - uv venv
+    - source .venv/bin/activate
+    - uv pip install git-filter-repo
+    - git config --global user.email "alopez@icf.gob.hn"
+    - git config --global user.name "Luis Alfredo López Gonzales"
+  script:
+    - git clone --branch=main https://$CI_SERVER_HOST/$CI_PROJECT_PATH.git repo-filtered
+    - cd repo-filtered
+    - git filter-repo --path workflows/data/ --invert-paths
+    - git remote add github https://${GITHUB_TOKEN}@github.com/lalgonzales/adef-tools.git
+    - git push --force github main
+  only:
+    - main
