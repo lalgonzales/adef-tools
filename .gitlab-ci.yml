@@ -154,3 +154,24 @@ auto-bump:
   artifacts:
     paths:
       - variables
+
+sync_to_github:
+  stage: deploy
+  extends: .default-tags
+  image: docker.io/python:3.12
+  before_script:
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="$HOME/.local/bin:$PATH"
+    - uv venv
+    - source .venv/bin/activate
+    - uv pip install git-filter-repo
+    - git config --global user.email "alopez@icf.gob.hn"
+    - git config --global user.name "Luis Alfredo López Gonzales"
+  script:
+    - git clone --branch=main https://$CI_SERVER_HOST/$CI_PROJECT_PATH.git repo-filtered
+    - cd repo-filtered
+    - git filter-repo --path workflows/data/ --invert-paths
+    - git remote add github https://${GITHUB_TOKEN}@github.com/lalgonzales/adef-tools.git
+    - git push --force github main
+  only:
+    - main
