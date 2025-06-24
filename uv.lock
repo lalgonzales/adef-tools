@@ -9,7 +9,7 @@ resolution-markers = [
 
 [[package]]
 name = "adef-tools"
-version = "0.6.0"
+version = "0.6.1"
 source = { editable = "." }
 dependencies = [
     { name = "dask", extra = ["distributed"] },
@@ -61,7 +61,7 @@ tests = [
 [package.metadata]
 requires-dist = [
     { name = "dask", extras = ["distributed"], specifier = ">=2025.4.1" },
-    { name = "dask-geopandas", marker = "extra == 'dask'", specifier = ">=0.6.0" },
+    { name = "dask-geopandas", marker = "extra == 'dask'", specifier = ">=0.6.1" },
     { name = "gdal", specifier = ">=3.11.0.1" },
     { name = "geoalchemy2", specifier = ">=0.17.1" },
     { name = "geopandas", specifier = ">=1.0.1" },
@@ -91,7 +91,7 @@ dev = [
     { name = "commitizen", specifier = ">=4.7.0" },
     { name = "cz-changeup", specifier = ">=1.1.2" },
     { name = "dask", specifier = ">=2025.4.1" },
-    { name = "dask-geopandas", specifier = ">=0.6.0" },
+    { name = "dask-geopandas", specifier = ">=0.6.1" },
     { name = "memory-profiler", specifier = ">=0.61.0" },
     { name = "notebook", specifier = ">=7.4.2" },
     { name = "pip", specifier = ">=25.1.1" },
@@ -675,7 +675,7 @@ distributed = [
 
 [[package]]
 name = "dask-geopandas"
-version = "0.6.0"
+version = "0.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dask", extra = ["dataframe"] },
@@ -683,9 +683,9 @@ dependencies = [
     { name = "packaging" },
     { name = "shapely" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/da/ea20602a97db7bc1c4322eaf5c14b209cac9829782f17680a2c590d8f838/dask_geopandas-0.6.0.tar.gz", hash = "sha256:b1fc2a041550d609b87db9fcfad2e8217f7336e3436415da11ba9dc8437272b1", size = 63726, upload-time = "2025-06-02T20:49:19.762Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a6/da/ea20602a97db7bc1c4322eaf5c14b209cac9829782f17680a2c590d8f838/dask_geopandas-0.6.1.tar.gz", hash = "sha256:b1fc2a041550d609b87db9fcfad2e8217f7336e3436415da11ba9dc8437272b1", size = 63726, upload-time = "2025-06-02T20:49:19.762Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/df/41/ea5282553f26f387a95d6c46a9d0921f53a4a09f6bb0df1bc8edaa63d557/dask_geopandas-0.6.0-py3-none-any.whl", hash = "sha256:0b6c2a8f7fae94667c4af539e591fa7fb59c5c3206188fa51e461d395ef80240", size = 55067, upload-time = "2025-06-02T20:49:18.729Z" },
+    { url = "https://files.pythonhosted.org/packages/df/41/ea5282553f26f387a95d6c46a9d0921f53a4a09f6bb0df1bc8edaa63d557/dask_geopandas-0.6.1-py3-none-any.whl", hash = "sha256:0b6c2a8f7fae94667c4af539e591fa7fb59c5c3206188fa51e461d395ef80240", size = 55067, upload-time = "2025-06-02T20:49:18.729Z" },
 ]
 
 [[package]]

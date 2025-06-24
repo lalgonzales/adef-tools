@@ -1,3 +1,21 @@
+## v0.6.1 (2025-06-24)
+
+### Fix
+
+- dependencies: remove pyproj from project dependencies
+
+- dependencies: update dask-geopandas version
+
+  - dask-geopandas constraint to >=0.5.0
+
+  - add bump uv-pre-commit to v0.7.13
+
+  See merge request alopez/adef-tools!17
+
+### Refactor
+
+- dependencies: remove unused build dependencies from pyproject.toml
+
 ## v0.6.0 (2025-06-24)
 
 ### Feat
