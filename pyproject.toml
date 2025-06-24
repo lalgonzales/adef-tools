@@ -118,14 +118,6 @@ url = "https://girder.github.io/large_image_wheels"
 
 
 [dependency-groups]
-build = [
-    "fiona>=1.10.1",
-    "pyinstaller>=6.13.0",
-    "pyproj>=3.7.1",
-    "rasterio>=1.4.3",
-    "shapely>=2.1.0",
-]
-
 tests = [
     "pytest>=8.3.5",
 ]
