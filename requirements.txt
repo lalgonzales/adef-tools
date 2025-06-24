@@ -307,7 +307,7 @@ dask==2025.4.1 \
     #   adef-tools
     #   dask-geopandas
     #   distributed
-dask-geopandas==0.5.0 \
+dask-geopandas==0.6.0 \
     --hash=sha256:0b6c2a8f7fae94667c4af539e591fa7fb59c5c3206188fa51e461d395ef80240 \
     --hash=sha256:b1fc2a041550d609b87db9fcfad2e8217f7336e3436415da11ba9dc8437272b1
 debugpy==1.8.14 \

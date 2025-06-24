@@ -59,7 +59,7 @@ issues = "https://git.icf.gob.hn/alopez/adef-integ-tools/-/issues"
 
 [project.optional-dependencies]
 dask = [
-    "dask-geopandas>=0.6.0",
+    "dask-geopandas>=0.5.0",
 ]
 
 [tool]
@@ -135,7 +135,6 @@ dev = [
     "commitizen>=4.7.0",
     "cz-changeup>=1.1.2",
     "dask>=2025.4.1",
-    "dask-geopandas>=0.6.0",
     "memory-profiler>=0.61.0",
     "notebook>=7.4.2",
     "pip>=25.1.1",
