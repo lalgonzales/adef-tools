@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "adef-tools"
-version = "0.5.0"
+version = "0.6.0"
 description = "Script to work with Integrated Alert Deforestacion"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -59,7 +59,7 @@ issues = "https://git.icf.gob.hn/alopez/adef-integ-tools/-/issues"
 
 [project.optional-dependencies]
 dask = [
-    "dask-geopandas>=0.5.0",
+    "dask-geopandas>=0.6.0",
 ]
 
 [tool]
@@ -82,7 +82,7 @@ max-line-length = 88
 name = "cz_changeup"
 tag_format = "v$version"
 version_scheme = "pep440"
-version = "0.5.0"
+version = "0.6.0"
 update_changelog_on_bump = true
 major_version_zero = true
 version_files = [
@@ -135,7 +135,7 @@ dev = [
     "commitizen>=4.7.0",
     "cz-changeup>=1.1.2",
     "dask>=2025.4.1",
-    "dask-geopandas>=0.5.0",
+    "dask-geopandas>=0.6.0",
     "memory-profiler>=0.61.0",
     "notebook>=7.4.2",
     "pip>=25.1.1",

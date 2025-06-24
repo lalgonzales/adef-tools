@@ -1,3 +1,59 @@
+## v0.6.0 (2025-06-24)
+
+### Feat
+
+- workflow: extend ADEF workflow with spatial joins, priority assignment and DB sync
+
+  feat: extend ADEF workflow with spatial joins, alert priority logic and db write operations
+
+  ### Changes included
+
+  - Add `ADEFUPDATE` class with methods for:
+
+  - Loading and merging current and historical alerts from PostgreSQL
+
+  - Discarding duplicates and computing new alert geometries
+
+  - Classifying updates (new, replace, overlap)
+
+  - Assigning attributes from LIM, REM layers and POA fields
+
+  - Inserting updated alerts into database
+
+  - Add GDAL-based raster-to-vector and vector-to-raster tools
+
+  - Modularize utilities and config handling (`validate_setting_tif`, `get_gdalwarp_path`, etc.)
+
+  - Improve logic and structure in `main.py`, `adef_workflow.py`
+
+  See merge request alopez/adef-tools!16
+
+- extend ADEF workflow with spatial joins, alert priority logic and db write operations
+
+  feat: extend ADEF workflow with spatial joins, alert priority logic and db write operations
+
+  ### Changes included
+
+  - Add `ADEFUPDATE` class with methods for:
+
+  - Loading and merging current and historical alerts from PostgreSQL
+
+  - Discarding duplicates and computing new alert geometries
+
+  - Classifying updates (new, replace, overlap)
+
+  - Assigning attributes from LIM, REM layers and POA fields
+
+  - Inserting updated alerts into database
+
+  - Add GDAL-based raster-to-vector and vector-to-raster tools
+
+  - Modularize utilities and config handling (`validate_setting_tif`, `get_gdalwarp_path`, etc.)
+
+  - Improve logic and structure in `main.py`, `adef_workflow.py`
+
+  See merge request alopez/adef-tools!16
+
 ## v0.5.0 (2025-06-13)
 
 ### Feat
