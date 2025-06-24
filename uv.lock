@@ -13,14 +13,23 @@ version = "0.5.0"
 source = { editable = "." }
 dependencies = [
     { name = "dask", extra = ["distributed"] },
+    { name = "gdal" },
+    { name = "geoalchemy2" },
     { name = "geopandas" },
     { name = "matplotlib" },
     { name = "owslib" },
     { name = "psycopg2" },
     { name = "pyarrow" },
+    { name = "pyproj" },
+    { name = "python-dotenv" },
     { name = "rioxarray" },
     { name = "sqlalchemy" },
     { name = "tqdm" },
+]
+
+[package.optional-dependencies]
+dask = [
+    { name = "dask-geopandas" },
 ]
 
 [package.dev-dependencies]
@@ -35,29 +44,38 @@ deploy = [
     { name = "twine" },
 ]
 dev = [
+    { name = "bokeh" },
     { name = "commitizen" },
     { name = "cz-changeup" },
+    { name = "dask" },
+    { name = "dask-geopandas" },
+    { name = "memory-profiler" },
+    { name = "notebook" },
     { name = "pip" },
     { name = "pre-commit" },
 ]
 tests = [
-    { name = "bokeh" },
-    { name = "notebook" },
     { name = "pytest" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "dask", extras = ["distributed"], specifier = ">=2025.4.1" },
+    { name = "dask-geopandas", marker = "extra == 'dask'", specifier = ">=0.5.0" },
+    { name = "gdal", specifier = ">=3.11.0.1" },
+    { name = "geoalchemy2", specifier = ">=0.17.1" },
     { name = "geopandas", specifier = ">=1.0.1" },
     { name = "matplotlib", specifier = ">=3.10.1" },
     { name = "owslib", specifier = ">=0.33.0" },
     { name = "psycopg2", specifier = ">=2.9.10" },
     { name = "pyarrow", specifier = ">=20.0.0" },
+    { name = "pyproj", specifier = ">=3.7.1" },
+    { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "rioxarray", specifier = ">=0.19.0" },
     { name = "sqlalchemy", specifier = ">=2.0.41" },
     { name = "tqdm", specifier = ">=4.67.1" },
 ]
+provides-extras = ["dask"]
 
 [package.metadata.requires-dev]
 build = [
@@ -69,16 +87,17 @@ build = [
 ]
 deploy = [{ name = "twine", specifier = ">=6.1.0" }]
 dev = [
+    { name = "bokeh", specifier = ">=3.7.3" },
     { name = "commitizen", specifier = ">=4.7.0" },
     { name = "cz-changeup", specifier = ">=1.1.2" },
+    { name = "dask", specifier = ">=2025.4.1" },
+    { name = "dask-geopandas", specifier = ">=0.5.0" },
+    { name = "memory-profiler", specifier = ">=0.61.0" },
+    { name = "notebook", specifier = ">=7.4.2" },
     { name = "pip", specifier = ">=25.1.1" },
     { name = "pre-commit", specifier = ">=4.2.0" },
 ]
-tests = [
-    { name = "bokeh", specifier = ">=3.1.0" },
-    { name = "notebook", specifier = ">=7.4.2" },
-    { name = "pytest", specifier = ">=8.3.5" },
-]
+tests = [{ name = "pytest", specifier = ">=8.3.5" }]
 
 [[package]]
 name = "affine"
@@ -645,8 +664,28 @@ wheels = [
 ]
 
 [package.optional-dependencies]
+dataframe = [
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pyarrow" },
+]
 distributed = [
     { name = "distributed" },
+]
+
+[[package]]
+name = "dask-geopandas"
+version = "0.5.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dask", extra = ["dataframe"] },
+    { name = "geopandas" },
+    { name = "packaging" },
+    { name = "shapely" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a6/da/ea20602a97db7bc1c4322eaf5c14b209cac9829782f17680a2c590d8f838/dask_geopandas-0.5.0.tar.gz", hash = "sha256:b1fc2a041550d609b87db9fcfad2e8217f7336e3436415da11ba9dc8437272b1", size = 63726, upload-time = "2025-06-02T20:49:19.762Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/df/41/ea5282553f26f387a95d6c46a9d0921f53a4a09f6bb0df1bc8edaa63d557/dask_geopandas-0.5.0-py3-none-any.whl", hash = "sha256:0b6c2a8f7fae94667c4af539e591fa7fb59c5c3206188fa51e461d395ef80240", size = 55067, upload-time = "2025-06-02T20:49:18.729Z" },
 ]
 
 [[package]]
@@ -872,6 +911,34 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/45/d8/8425e6ba5fcec61a1d16e41b1b71d2bf9344f1fe48012c2b48b9620feae5/fsspec-2025.3.2.tar.gz", hash = "sha256:e52c77ef398680bbd6a98c0e628fbc469491282981209907bbc8aea76a04fdc6", size = 299281, upload-time = "2025-03-31T15:27:08.524Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/44/4b/e0cfc1a6f17e990f3e64b7d941ddc4acdc7b19d6edd51abf495f32b1a9e4/fsspec-2025.3.2-py3-none-any.whl", hash = "sha256:2daf8dc3d1dfa65b6aa37748d112773a7a08416f6c70d96b264c96476ecaf711", size = 194435, upload-time = "2025-03-31T15:27:07.028Z" },
+]
+
+[[package]]
+name = "gdal"
+version = "3.11.0.1"
+source = { registry = "https://girder.github.io/large_image_wheels" }
+wheels = [
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.11.0.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:174c6a7d02dd7f30f8c711f344d8e728b798b6ec20a625c4612a11dcb763b6d8" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.11.0.1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:a66ad424a79801c23ae146df6d611829206bcdd8eadaaff411c568a05b46d15a" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.11.0.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:978a6b422d2e1766e4f2d3c22aac80614123dd3e14a788473491fee021709fa9" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.11.0.1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:f57d5eb7825201b03f91a43d0b80e598e18cf9b63741cbef694260e88271db0e" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.11.0.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:2deeffb3184681b59509394e7949960b4d26a3aecdbb2925ee2d0f5a33a57627" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.11.0.1-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:f910d010ea09dc2b69ad4402d1ffe88b7966a0a042cc92b002191483e22872aa" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.11.0.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:28d8f3f5ce1e135c15b365b4719a171b3b2b20fc9232a364a4da5cacff101d03" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.11.0.1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:5896d8793335f3c4a0d6c3a6ceb0ceb73b9074763eac09afe10fe393ff5ec4a4" },
+]
+
+[[package]]
+name = "geoalchemy2"
+version = "0.17.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "sqlalchemy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/46/52/60214c086a57a7e3ea82241bab94e09827f2b7f7c2084fe6fc280c099b23/geoalchemy2-0.17.1.tar.gz", hash = "sha256:ff5bbe0db5a4ff979f321c8aa1a7556f444ea30cda5146189b1a177ae5bec69d", size = 231566, upload-time = "2025-02-17T09:41:04.72Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f5/82/e83e0f74cba8bbff9c12b2dea4693adb0cf89204012da48433ebd8e8c4d8/GeoAlchemy2-0.17.1-py3-none-any.whl", hash = "sha256:29f41b67d3a52df47821b695d31dec8600747c6ef4de62ee69811bde481dd2ae", size = 77791, upload-time = "2025-02-17T09:41:02.7Z" },
 ]
 
 [[package]]
@@ -1765,6 +1832,18 @@ wheels = [
 ]
 
 [[package]]
+name = "memory-profiler"
+version = "0.61.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "psutil" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b2/88/e1907e1ca3488f2d9507ca8b0ae1add7b1cd5d3ca2bc8e5b329382ea2c7b/memory_profiler-0.61.0.tar.gz", hash = "sha256:4e5b73d7864a1d1292fb76a03e82a3e78ef934d06828a698d9dada76da2067b0", size = 35935, upload-time = "2022-11-15T17:57:28.994Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/49/26/aaca612a0634ceede20682e692a6c55e35a94c21ba36b807cc40fe910ae1/memory_profiler-0.61.0-py3-none-any.whl", hash = "sha256:400348e61031e3942ad4d4109d18753b2fb08c2f6fb8290671c5513a34182d84", size = 31803, upload-time = "2022-11-15T17:57:27.031Z" },
+]
+
+[[package]]
 name = "mistune"
 version = "3.1.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2590,6 +2669,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/66/c0/0c8b6ad9f17a802ee498c46e004a0eb49bc148f2fd230864601a86dcf6db/python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3", size = 342432, upload-time = "2024-03-01T18:36:20.211Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427", size = 229892, upload-time = "2024-03-01T18:36:18.57Z" },
+]
+
+[[package]]
+name = "python-dotenv"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/88/2c/7bb1416c5620485aa793f2de31d3df393d3686aa8a8506d11e10e13c5baf/python_dotenv-1.1.0.tar.gz", hash = "sha256:41f90bc6f5f177fb41f53e87666db362025010eb28f60a01c9143bfa33a2b2d5", size = 39920, upload-time = "2025-03-25T10:14:56.835Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1e/18/98a99ad95133c6a6e2005fe89faedf294a748bd5dc803008059409ac9b1e/python_dotenv-1.1.0-py3-none-any.whl", hash = "sha256:d7c01d9e2293916c18baf562d95698754b0dbbb5e74d457c45d4f6561fb9d55d", size = 20256, upload-time = "2025-03-25T10:14:55.034Z" },
 ]
 
 [[package]]

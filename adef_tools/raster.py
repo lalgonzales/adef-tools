@@ -1,132 +1,30 @@
 """Rasters functions for ADEF tools."""
 
 import os
-import sys
 import subprocess
 import pathlib
-import platform
 import time
-import shutil
-import requests
 import threading
+import requests
 from tqdm import tqdm
 import pandas as pd
 import geopandas as gpd
-import xarray as xr
-import rioxarray as rxr
 import numpy as np
-
-
-def get_safe_lock(name="rio", client=None):
-    """
-    Returns a Dask distributed lock (if Client is running), or a local threading lock.
-
-    Args:
-        name (str): Lock name
-        client (Client, optional): Dask client. Optional, will be auto-detected.
-
-    Returns:
-        Lock object
-    """
-    try:
-        from dask.distributed import Lock, default_client
-
-        if client is not None:
-            return Lock(name, client=client)
-        else:
-            # Try to get an existing active client
-            try:
-                return Lock(name, client=default_client())
-            except ValueError:
-                pass  # No client available
-    except ImportError:
-        pass
-
-    return threading.Lock()
-
-
-def get_gdal_polygonize_path():
-    """
-    Determines the path to the `gdal_polygonize` utility based on the operating system.
-
-    Raises:
-        FileNotFoundError: If `gdal_polygonize` is not found on the system.
-
-    Returns:
-        str: The full path to the `gdal_polygonize` utility.
-    """
-    system = platform.system().lower()
-
-    if system == "linux":
-        path = shutil.which("gdal_polygonize.py")
-        if path:
-            return path  # binary found in PATH
-
-    elif system == "windows":
-        # Look for gdal_polygonize.py in Conda or Python scripts folder
-        conda_prefix = os.environ.get("CONDA_PREFIX", "")
-        candidates = [
-            os.path.join(conda_prefix, "Scripts", "gdal_polygonize.py"),
-            os.path.join(sys.prefix, "Scripts", "gdal_polygonize.py"),
-        ]
-        for path in candidates:
-            if os.path.isfile(path):
-                return path
-
-    raise FileNotFoundError(
-        "gdal_polygonize not found. Ensure GDAL is installed and available."
-        "For conda run `conda install -c conda-forge gdal` for Windows users."
-        "For Linux users with uv, run `uv pip install --find-links https://girder.github.io/large_image_wheels gdal pyproj`."
-        "otherwise, install GDAL from your package manager (e.g., apt, yum, dnf) or from source."
-    )
-
-
-def get_gdalwarp_path():
-    """
-    Determines the path to the `gdalwarp` utility based on the operating system.
-
-    Raises:
-        FileNotFoundError: If `gdalwarp` is not found on the system.
-
-    Returns:
-        str: The full path to the `gdalwarp` utility.
-    """
-    system = platform.system().lower()
-
-    # Linux: usually in PATH
-    if system == "linux":
-        path = shutil.which("gdalwarp")
-        if path:
-            return path
-
-    # Windows: look inside Conda environment
-    elif system == "windows":
-        conda_prefix = os.environ.get("CONDA_PREFIX", "")
-        candidates = [
-            os.path.join(conda_prefix, "Library", "bin", "gdalwarp.exe"),
-            os.path.join(conda_prefix, "Scripts", "gdalwarp.exe"),
-            shutil.which("gdalwarp"),  # just in case it's in PATH
-        ]
-        for path in candidates:
-            if path and os.path.isfile(path):
-                return path
-
-    raise FileNotFoundError(
-        "gdalwarp not found. Ensure GDAL is installed and available."
-        "For conda run `conda install -c conda-forge gdal` for Windows users."
-        "For Linux users with uv, run `uv pip install --find-links https://girder.github.io/large_image_wheels gdal pyproj`."
-        "otherwise, install GDAL from your package manager (e.g., apt, yum, dnf) or from source."
-    )
+from adef_tools.utils import (
+    validate_setting_tif,
+    get_gdalwarp_path,
+    get_gdal_polygonize_path,
+)
 
 
 def dw_tif(url, tif_out, timeout=10, retries=3, delay=3):
     """
-    Downloads a TIF file from a given URL and saves it to the specified output path, with retries.
+    Download a TIF file from a given URL and save it to the specified output path, with retries.
 
     Args:
         url (str): The URL from which to download the TIF file.
         tif_out (str): The path where the downloaded TIF file will be saved.
-        timeout (int, optional): The timeout in seconds for the download request. Defaults to 10.
+        timeout (int, optional): Timeout in seconds for the download request. Defaults to 10.
         retries (int, optional): Number of retry attempts if download fails. Defaults to 3.
         delay (int, optional): Seconds to wait between retries. Defaults to 3.
 
@@ -139,70 +37,28 @@ def dw_tif(url, tif_out, timeout=10, retries=3, delay=3):
     tif_out_name = os.path.basename(tif_out)
     dir_base = os.path.dirname(tif_out)
     os.makedirs(dir_base, exist_ok=True)
-
     attempt = 0
     while attempt < retries:
-        print(
-            f"Descargando el TIF de Alertas desde {url}... (intento {attempt+1}/{retries})"
-        )
+        print(f"Downloading TIF from {url}... (attempt {attempt+1}/{retries})")
         try:
             response = requests.get(url, timeout=timeout)
             response.raise_for_status()
             with open(tif_out, "wb") as file:
                 file.write(response.content)
-            print(f"Archivo descargado y guardado en {tif_out_name}")
+            print(f"File downloaded and saved as {tif_out_name}")
             return
         except (
             requests.exceptions.HTTPError,
             requests.exceptions.ConnectionError,
         ) as err:
-            print(f"Error de conexión o HTTP: {err}")
+            print(f"HTTP or connection error: {err}")
         except requests.exceptions.RequestException as e:
-            print(f"Ocurrió un error de red: {e}")
+            print(f"Network error occurred: {e}")
         attempt += 1
         if attempt < retries:
-            print(f"Reintentando en {delay} segundos...")
+            print(f"Retrying in {delay} seconds...")
             time.sleep(delay)
-    raise RuntimeError(
-        f"No se pudo descargar el archivo después de {retries} intentos."
-    )
-
-
-def validate_setting_tif(tif, **rxr_kwargs):
-    """
-    Validates and loads a TIF file or xarray.DataArray, returning the object and its name.
-
-    Args:
-        tif (str, pathlib.Path, or xr.DataArray): Path to the TIF file or an xarray DataArray.
-        **rxr_kwargs: Extra keyword arguments for rioxarray.open_rasterio.
-
-    Raises:
-        FileNotFoundError: If the TIF file path does not exist.
-        ValueError: If the DataArray does not have a name.
-
-    Returns:
-        tuple: (tif object, tif name)
-    """
-    # Validate input type and load the TIF file or DataArray
-    if isinstance(tif, (str, pathlib.Path)):
-        tif_name = os.path.basename(tif).split(".")[:-1][0]
-        if not os.path.exists(tif):
-            raise FileNotFoundError(f"The input TIF file does not exist: {tif_name}")
-        tif_data = rxr.open_rasterio(tif, **rxr_kwargs)
-        tif_data.name = tif_name
-    elif isinstance(tif, xr.DataArray):
-        if tif.name is not None:
-            tif_name = tif.name
-        else:
-            raise ValueError(
-                "The TIF must have a name. Assign one using `data.name = name`."
-            )
-        tif_data = tif
-    else:
-        raise TypeError(
-            "The input must be a string, pathlib.Path, or xarray.DataArray."
-        )
-    return tif_data, tif_name
+    raise RuntimeError(f"Could not download the file after {retries} attempts.")
 
 
 def clip_tif_ext_gdal(tif, roi_clip, tif_out, rxr_kwargs=None, gpd_kwargs=None):
@@ -240,10 +96,10 @@ def clip_tif_ext_gdal(tif, roi_clip, tif_out, rxr_kwargs=None, gpd_kwargs=None):
     if data_clip.crs != tif_data.rio.crs:
         data_clip = data_clip.to_crs(tif_data.rio.crs)
 
-    # Bounding box del vector (sin alinear)
+    # Bounding box of the vector (unaligned)
     ext_raw = data_clip.total_bounds
 
-    # Alinear el bounding box al grid del raster
+    # Align the bounding box to the raster grid
     x0, y0 = tif_data.rio.transform()[2], tif_data.rio.transform()[5]
     xres, yres = tif_data.rio.resolution()
     xmin, ymin, xmax, ymax = ext_raw
@@ -339,6 +195,70 @@ def clip_tif_ext_rxr(tif, vector, out_tif=None, **rxr_kwargs):
     except Exception as e:
         print(f"Error clipping {tif_name} with {vector_name}")
         raise e
+
+
+def tif_to_vector_gdal(
+    tif, out_folder, out_file="vector.gpkg", rxr_kwargs=None, gpd_kwargs=None
+):
+    """
+    Converts a raster file (TIF) to a vector file (GeoPackage).
+
+    Args:
+        tif (str): Path to the input raster file to be converted.
+        out_folder (str): Path to the folder where the output vector file will be saved.
+        name_out (str, optional): Name of the output vector file, including the extension.
+            Supported formats are GeoPackage (.gpkg), GeoJSON (.json), or Shapefile (.shp).
+            Defaults to "vector.gpkg".
+        layer_name (str, optional): Name of the layer in the output vector file.
+            If not provided, it defaults to the name of the output file without the extension.
+
+    Raises:
+        FileNotFoundError: If the input raster file does not exist.
+
+    Returns:
+        None
+    """
+    _, tif_name = validate_setting_tif(tif, **rxr_kwargs)
+
+    print(f"Converting {tif_name} to vector...")
+
+    # Set the kwargs for rioxarray and geopandas
+    rxr_kwargs = rxr_kwargs or {}
+    gpd_kwargs = gpd_kwargs or {}
+
+    # Get the layer name
+    if gpd_kwargs.get("layer") is None:
+        layer_name = os.path.basename(out_file).split(".")[:-1][0]
+    else:
+        layer_name = gpd_kwargs.get("layer")
+
+    driver = str(out_file).split(".")[-1].lower()
+    if driver == "shp":
+        driver = "'ESRI Shapefile'"
+    out_vector = os.path.join(out_folder, out_file)
+    polygonize_path = get_gdal_polygonize_path()
+    print(f"using {polygonize_path} to convert the raster to vector")
+    command = (
+        ["python"]
+        + [polygonize_path]
+        + [tif]
+        + [out_vector]
+        + [layer_name]
+        + ["value"]
+        + ["-of", driver]
+        + ["-overwrite"]
+        + ["-mask", tif]
+    )
+    try:
+        subprocess.run(command, check=True)
+        print(f"Vector file saved as {out_file} in {out_folder}")
+        return out_vector
+    except subprocess.CalledProcessError as e:
+        print(f"Error running gdal_polygonize for {tif_name}: {e}")
+        raise
+    except Exception as e:
+        print(f"Unexpected error while running gdal_polygonize for {tif_name}: {e}")
+        raise
 
 
 def check_tif_attr(tif_adjusted, tif_reference, **rxr_kwargs):
@@ -586,15 +506,15 @@ def set_forest_data(out_data):
     present = time.strftime("%Y-%m-%d", time.localtime(time.time()))
     tifs_gitlab = {
         "2014-01-01_2017-12-31": {
-            "url": "https://git.icf.gob.hn/alopez/adef-integ-tools/-/raw/main/data/bosque14_lzw.tif",
+            "url": "https://git.icf.gob.hn/alopez/adef-integ-tools/-/raw/main/workflows/data/bosque14_lzw.tif",
             "name": "bosque14_lzw",
         },
         "2018-01-01_2023-12-31": {
-            "url": "https://git.icf.gob.hn/alopez/adef-integ-tools/-/raw/main/data/bosque18_lzw.tif",
+            "url": "https://git.icf.gob.hn/alopez/adef-integ-tools/-/raw/main/workflows/data/bosque18_lzw.tif",
             "name": "bosque18_lzw",
         },
         f"2024-01-01_{present}": {
-            "url": "https://git.icf.gob.hn/alopez/adef-integ-tools/-/raw/main/data/bosque24_lzw.tif",
+            "url": "https://git.icf.gob.hn/alopez/adef-integ-tools/-/raw/main/workflows/data/bosque24_lzw.tif",
             "name": "bosque24_lzw",
         },
     }
@@ -635,11 +555,36 @@ def mask_adefintg_forest(
     Returns:
         str or xarray.DataArray: Path to the saved masked raster if out_file is provided, otherwise the masked raster as an xarray DataArray.
     """
-    periods = [
+    periods_options = [
         ("2014-01-01", "2017-12-31"),
         ("2018-01-01", "2023-12-31"),
         ("2024-01-01", time.strftime("%Y-%m-%d", time.localtime(time.time()))),
     ]
+
+    zero_day = pd.Timestamp("2014-12-31")
+
+    # Identify the start and end day of the tif
+    tif_data, _ = validate_setting_tif(tif_path, **rxr_kwargs)
+    tif_data = tif_data.where((tif_data > 0))
+    # if hasattr(tif_data, "persist"):
+    #     tif_data = tif_data.persist()
+    start_day = (tif_data % 10000).min().values.item()
+    end_day = (tif_data % 10000).max().values.item()
+    start_date = zero_day + pd.Timedelta(days=start_day)
+    end_date = zero_day + pd.Timedelta(days=end_day)
+
+    periods = []
+    for start, end in periods_options:
+        start_date_period = pd.Timestamp(start)
+        end_date_period = pd.Timestamp(end)
+        if start_date <= end_date_period and end_date >= start_date_period:
+            periods.append((start, end))
+    if not periods:
+        print(
+            "No valid periods found for the provided ADEFINTG raster. "
+            "Please check the date range of the raster."
+        )
+        return None
 
     tif_periods = divide_intg_for_forest(
         tif_intg=tif_path,
@@ -652,6 +597,7 @@ def mask_adefintg_forest(
     adef_masked = []
     for period_key, info in tif_periods.items():
         tif_period = info["data"]
+
         # Buscar la máscara de bosque cuyo 'period' coincida con period_key
         forest_path = None
         forest_matched = None
@@ -725,9 +671,7 @@ def tif_adef_to_phid(tif_phid, tif_adef_masked, out_file=None, **rxr_kwargs):
     """
     # Check if tif_phid exists, if not, download it
     if not os.path.exists(tif_phid):
-        tif_phid_git = (
-            "https://git.icf.gob.hn/alopez/adef-integ-tools/-/raw/main/data/phid_hn.tif"
-        )
+        tif_phid_git = "https://git.icf.gob.hn/alopez/adef-integ-tools/-/raw/main/workflows/data/phid_hn.tif"
         dw_tif(tif_phid_git, tif_phid)
 
     # Create the matched TIF path
@@ -881,14 +825,12 @@ def filter_adef_intg_time(tif, filter_time, out_file=None, **rxr_kwargs):
                 difference_days = filter_quantity
                 days_to_first = days_to_last - difference_days
             elif filter_units == "Months":
-                difference_days = (
-                    filter_end - pd.DateOffset(months=filter_quantity)
-                ).days
+                filter_start = filter_end - pd.DateOffset(months=filter_quantity)
+                difference_days = (filter_end - filter_start).days
                 days_to_first = days_to_last - difference_days
             elif filter_units == "Years":
-                difference_days = (
-                    filter_end - pd.DateOffset(years=filter_quantity)
-                ).days
+                filter_start = filter_end - pd.DateOffset(years=filter_quantity)
+                difference_days = (filter_end - filter_start).days
                 days_to_first = days_to_last - difference_days
             else:
                 raise ValueError(

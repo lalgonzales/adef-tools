@@ -35,11 +35,15 @@ classifiers = [
 
 dependencies = [
     "dask[distributed]>=2025.4.1",
+    "gdal>=3.11.0.1",
+    "geoalchemy2>=0.17.1",
     "geopandas>=1.0.1",
     "matplotlib>=3.10.1",
     "owslib>=0.33.0",
     "psycopg2>=2.9.10",
     "pyarrow>=20.0.0",
+    "pyproj>=3.7.1",
+    "python-dotenv>=1.1.0",
     "rioxarray>=0.19.0",
     "sqlalchemy>=2.0.41",
     "tqdm>=4.67.1",
@@ -52,6 +56,11 @@ adef-tools = "adef_tools.cli:cli"
 repository = "https://git.icf.gob.hn/alopez/adef-integ-tools"
 homepage = "https://git.icf.gob.hn/alopez/adef-integ-tools"
 issues = "https://git.icf.gob.hn/alopez/adef-integ-tools/-/issues"
+
+[project.optional-dependencies]
+dask = [
+    "dask-geopandas>=0.5.0",
+]
 
 [tool]
 [tool.hatch.build.targets.sdist]
@@ -104,6 +113,9 @@ bump_map = [
   { type = "refactor", bump = "patch" }
 ]
 
+[[tool.uv.index]]
+url = "https://girder.github.io/large_image_wheels"
+
 
 [dependency-groups]
 build = [
@@ -115,14 +127,17 @@ build = [
 ]
 
 tests = [
-    "bokeh>=3.1.0",
-    "notebook>=7.4.2",
     "pytest>=8.3.5",
 ]
 
 dev = [
+    "bokeh>=3.7.3",
     "commitizen>=4.7.0",
     "cz-changeup>=1.1.2",
+    "dask>=2025.4.1",
+    "dask-geopandas>=0.5.0",
+    "memory-profiler>=0.61.0",
+    "notebook>=7.4.2",
     "pip>=25.1.1",
     "pre-commit>=4.2.0",
 ]

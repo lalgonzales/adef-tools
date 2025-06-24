@@ -38,8 +38,10 @@ env/
 # Archivos de configuración sensibles
 *.env
 config.yaml
+db_mapping.yaml
 
 # Chore
 private/
 Archive.zip
 **.aux.xml
+

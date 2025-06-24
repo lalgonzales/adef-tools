@@ -1,6 +1,5 @@
 """Alerts processing functions."""
 
-import os
 from adef_tools import raster
 
 
@@ -132,3 +131,25 @@ class ADEFINTG:
             **rxr_kwargs,
         )
         return adef_with_phid
+
+    def to_vector(
+        self, tif_path, out_folder, out_file=None, rxr_kwargs=None, gpd_kwargs=None
+    ):
+        """_summary_"""
+        if out_file is None:
+            vectorized = raster.tif_to_vector_gdal(
+                tif=tif_path,
+                out_folder=out_folder,
+                rxr_kwargs=rxr_kwargs,
+                gpd_kwargs=gpd_kwargs,
+            )
+            return vectorized
+
+        vectorized = raster.tif_to_vector_gdal(
+            tif=tif_path,
+            out_folder=out_folder,
+            out_file=out_file,
+            rxr_kwargs=rxr_kwargs,
+            gpd_kwargs=gpd_kwargs,
+        )
+        return vectorized

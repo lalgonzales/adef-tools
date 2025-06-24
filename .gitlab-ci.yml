@@ -26,7 +26,7 @@ pre-commit:
     - export PATH="$HOME/.local/bin:$PATH"
     - git config --global user.email "ci-runner@gitlab.com"
     - git config --global user.name "GitLab CI"
-    - git remote set-url origin "http://project_9_bot:${ADEF_INTG_TOKEN}@git.icf.gob.hn/alopez/adef-tools.git"
+    - git remote set-url origin "https://project_9_bot:${ADEF_INTG_TOKEN}@git.icf.gob.hn/alopez/adef-tools.git"
   script:
     - uv venv
     - source .venv/bin/activate
