@@ -42,7 +42,6 @@ dependencies = [
     "owslib>=0.33.0",
     "psycopg2>=2.9.10",
     "pyarrow>=20.0.0",
-    "pyproj>=3.7.1",
     "python-dotenv>=1.1.0",
     "rioxarray>=0.19.0",
     "sqlalchemy>=2.0.41",
