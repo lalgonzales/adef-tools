@@ -72,7 +72,7 @@ secret_detection:
   before_script:
     - pip install uv
     - uv venv
-    # - uv pip install .
+    - uv sync --index-strategy unsafe-best-match
   script:
     - uv run python -c "import adef_tools; print('adef-tools import successful')"
 
