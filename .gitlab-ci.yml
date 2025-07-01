@@ -88,7 +88,7 @@ test:matrix:
 upload_twine:
   stage: deploy
   extends: .default-tags
-  image: python:3.12
+  image: python:3.13
   variables:
     PACKAGE_NAME: "adef-tools"
     DIST_DIR: "dist"
@@ -117,7 +117,7 @@ upload_twine:
 auto-bump:
   stage: auto-bump
   extends: .default-tags
-  image: python:3.9
+  image: python:3.13
   before_script:
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.local/bin:$PATH"
