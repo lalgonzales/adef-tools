@@ -37,10 +37,3 @@ repos:
       hooks:
         - id: uv-lock
           args: ["--index-strategy=unsafe-best-match"]
-        - id: uv-export
-    # - repo: https://github.com/commitizen-tools/commitizen
-    #   rev: v4.7.0
-    #   hooks:
-    #     - id: commitizen
-    #     - id: commitizen-branch
-    #       stages: [pre-push]
