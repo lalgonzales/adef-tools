@@ -18,7 +18,7 @@ variables:
 pre-commit:
   stage: lint
   extends: .default-tags
-  image: docker.io/python:3.12
+  image: docker.io/python:3.13
   variables:
     PRE_COMMIT_HOME: ${CI_PROJECT_DIR}/.cache/pre-commit
   before_script:
@@ -158,7 +158,7 @@ auto-bump:
 sync_to_github:
   stage: deploy
   extends: .default-tags
-  image: docker.io/python:3.12
+  image: docker.io/python:3.13
   before_script:
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.local/bin:$PATH"
