@@ -305,11 +305,7 @@ dask==2025.4.1 \
     --hash=sha256:aacbb0a9667856fe58385015efd64aca22f0c0b2c5e1b5e633531060303bb4be
     # via
     #   adef-tools
-    #   dask-geopandas
     #   distributed
-dask-geopandas==0.6.0 \
-    --hash=sha256:0b6c2a8f7fae94667c4af539e591fa7fb59c5c3206188fa51e461d395ef80240 \
-    --hash=sha256:b1fc2a041550d609b87db9fcfad2e8217f7336e3436415da11ba9dc8437272b1
 debugpy==1.8.14 \
     --hash=sha256:0f920c7f9af409d90f5fd26e313e119d908b0dd2952c2393cd3247a462331f15 \
     --hash=sha256:1b2ac8c13b2645e0b1eaf30e816404990fbdb168e193322be8f545e8c01644a9 \
@@ -429,9 +425,7 @@ geoalchemy2==0.17.1 \
 geopandas==1.0.1 \
     --hash=sha256:01e147d9420cc374d26f51fc23716ac307f32b49406e4bd8462c07e82ed1d3d6 \
     --hash=sha256:b8bf70a5534588205b7a56646e2082fb1de9a03599651b3d80c99ea4c2ca08ab
-    # via
-    #   adef-tools
-    #   dask-geopandas
+    # via adef-tools
 greenlet==3.2.2 ; (python_full_version < '3.14' and platform_machine == 'AMD64') or (python_full_version < '3.14' and platform_machine == 'WIN32') or (python_full_version < '3.14' and platform_machine == 'aarch64') or (python_full_version < '3.14' and platform_machine == 'amd64') or (python_full_version < '3.14' and platform_machine == 'ppc64le') or (python_full_version < '3.14' and platform_machine == 'win32') or (python_full_version < '3.14' and platform_machine == 'x86_64') \
     --hash=sha256:00cd814b8959b95a546e47e8d589610534cfb71f19802ea8a2ad99d95d702057 \
     --hash=sha256:02a98600899ca1ca5d3a2590974c9e3ec259503b2d6ba6527605fcd74e08e207 \
@@ -1025,7 +1019,6 @@ numpy==2.2.5 \
     # via
     #   bokeh
     #   contourpy
-    #   dask
     #   geopandas
     #   matplotlib
     #   pandas
@@ -1049,7 +1042,6 @@ packaging==25.0 \
     #   bokeh
     #   commitizen
     #   dask
-    #   dask-geopandas
     #   distributed
     #   geoalchemy2
     #   geopandas
@@ -1101,7 +1093,6 @@ pandas==2.2.3 \
     --hash=sha256:fffb8ae78d8af97f849404f21411c95062db1496aeb3e56f146f0355c9989319
     # via
     #   bokeh
-    #   dask
     #   geopandas
     #   xarray
 pandocfilters==1.5.1 \
@@ -1296,9 +1287,7 @@ pyarrow==20.0.0 \
     --hash=sha256:f2d67ac28f57a362f1a2c1e6fa98bfe2f03230f7e15927aecd067433b1e70ce8 \
     --hash=sha256:f3b117b922af5e4c6b9a9115825726cac7d8b1421c37c2b5e24fbacc8930612c \
     --hash=sha256:febc4a913592573c8d5805091a6c2b5064c8bd6e002131f01061797d91c783c1
-    # via
-    #   adef-tools
-    #   dask
+    # via adef-tools
 pycparser==2.22 \
     --hash=sha256:491c8be9c040f5390f5bf44a5b07752bd07f56edf992381b05c701439eec10f6 \
     --hash=sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc
@@ -1378,7 +1367,6 @@ pyproj==3.7.1 \
     --hash=sha256:f550281ed6e5ea88fcf04a7c6154e246d5714be495c50c9e8e6b12d3fb63e158 \
     --hash=sha256:f6d6a2ccd5607cd15ef990c51e6f2dd27ec0a741e72069c387088bba3aab60fa
     # via
-    #   adef-tools
     #   geopandas
     #   rioxarray
 python-dateutil==2.9.0.post0 \
@@ -1736,9 +1724,7 @@ shapely==2.1.0 \
     --hash=sha256:f239c1484af66bc14b81a76f2a8e0fada29d59010423253ff857d0ccefdaa93f \
     --hash=sha256:f4a38b39a09340273c3c92b3b9a374272a12cc7e468aeeea22c1c46217a03e5c \
     --hash=sha256:f4f47e631aa4f9ec5576eac546eb3f38802e2f82aeb0552f9612cb9a14ece1db
-    # via
-    #   dask-geopandas
-    #   geopandas
+    # via geopandas
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
