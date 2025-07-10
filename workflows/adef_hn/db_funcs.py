@@ -23,13 +23,13 @@ import geopandas as gpd
 import dask_geopandas as dgpd
 import dask.dataframe as dd
 import numpy as np
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from memory_profiler import profile
 from adef_tools import vector
 from adef_tools.utils import calculate_decompose_date, load_yaml, build_engine
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(find_dotenv(), override=True)
 
 
 # --- Workflow-specific helper functions ---
@@ -431,6 +431,10 @@ class ADEFUPDATE:
             Prints errors if any engine fails to load.
         """
         try:
+            if yaml_path is None:
+                path_module = os.path.dirname(os.path.abspath(__file__))
+                yaml_path = os.path.join(path_module, "db_mapping.yaml")
+
             config = load_yaml(yaml_path)
             self.db_config = config
             for alias, db_conf in config.items():
