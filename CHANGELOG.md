@@ -1,3 +1,27 @@
+## v0.6.2 (2025-07-10)
+
+### Fix
+
+- db_funcs: use find_dotenv to load .env from project root...
+
+  fix(db_funcs): use find_dotenv to load .env from project root automatically
+
+  This ensures environment variables are loaded from the project root regardless
+
+  of execution directory, improving portability and reproducibility
+
+  See merge request alopez/adef-tools!23
+
+- db_funcs: use find_dotenv to load .env from project root automatically
+
+  fix(db_funcs): use find_dotenv to load .env from project root automatically
+
+  This ensures environment variables are loaded from the project root regardless
+
+  of execution directory, improving portability and reproducibility
+
+  See merge request alopez/adef-tools!23
+
 ## v0.6.1 (2025-06-24)
 
 ### Fix
