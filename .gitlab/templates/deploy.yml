@@ -1,0 +1,15 @@
+# .gitlab/templates/deploy.yml
+.deploy-template:
+  stage: deploy
+  image: python:3.13
+  before_script:
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="$HOME/.local/bin:$PATH"
+    - git config --global user.email "ci-runner@gitlab.com"
+    - git config --global user.name "GitLab CI"
+    - uv venv
+    - source .venv/bin/activate
+  script:
+    - uv pip install twine
+    - uv build
+    # Add your twine upload commands here

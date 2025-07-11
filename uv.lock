@@ -9,7 +9,6 @@ resolution-markers = [
 
 [[package]]
 name = "adef-tools"
-version = "0.6.2"
 source = { editable = "." }
 dependencies = [
     { name = "dask", extra = ["distributed"] },
