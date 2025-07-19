@@ -1,3 +1,11 @@
+## v0.6.3 (2025-07-19)
+
+### Fix
+
+- allow gdal>=3.10.0 for conda-forge compatibility
+
+  See merge request alopez/adef-tools!25
+
 ## v0.6.2 (2025-07-10)
 
 ### Fix
