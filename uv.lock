@@ -52,7 +52,7 @@ tests = [
 requires-dist = [
     { name = "dask", extras = ["distributed"], specifier = ">=2025.4.1" },
     { name = "dask-geopandas", marker = "extra == 'dask'", specifier = ">=0.5.0" },
-    { name = "gdal", specifier = ">=3.11.0.1" },
+    { name = "gdal", specifier = ">=3.10.0" },
     { name = "geoalchemy2", specifier = ">=0.17.1" },
     { name = "geopandas", specifier = ">=1.0.1" },
     { name = "matplotlib", specifier = ">=3.10.1" },

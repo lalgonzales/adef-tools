@@ -34,12 +34,12 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Development Status :: 4 - Beta",
+    "Development Status :: 3 - Alpha",
 ]
 
 dependencies = [
     "dask[distributed]>=2025.4.1",
-    "gdal>=3.11.0.1",
+    "gdal>=3.10.0",
     "geoalchemy2>=0.17.1",
     "geopandas>=1.0.1",
     "matplotlib>=3.10.1",
