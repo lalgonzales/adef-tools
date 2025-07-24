@@ -1,4 +1,4 @@
-# Configuración y uso de adef-tools
+# Configuración y uso de adef-tools v0.2.6 (No funciona con la última versión)
 
 ---
 
