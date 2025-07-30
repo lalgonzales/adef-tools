@@ -14,13 +14,14 @@ default:
   tags:
   - docker-runner
 include:
-- local: ".gitlab/templates/pre-commit.yml"
-- local: ".gitlab/templates/auto-bump.yml"
-- local: ".gitlab/templates/test.yml"
-- local: ".gitlab/templates/deploy.yml"
-- template: Jobs/SAST.gitlab-ci.yml
-- template: Jobs/Secret-Detection.gitlab-ci.yml
-- template: Jobs/Code-Quality.gitlab-ci.yml
+  - local: ".gitlab/templates/pre-commit.yml"
+  - local: ".gitlab/templates/auto-bump.yml"
+  - local: ".gitlab/templates/test.yml"
+  - local: ".gitlab/templates/deploy.yml"
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+  - component: $CI_SERVER_FQDN/components/sast/sast@3.0.1
+  # - component: $CI_SERVER_FQDN/components/code-quality-oss/pylint@main
+
 pre-commit:
   extends: ".pre-commit-template"
   variables:
@@ -40,14 +41,10 @@ auto-bump:
     GIT_REPO_URL: https://${CI_PROTECTED_BOT_USER}:${CI_PROTECTED_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git
   dependencies:
   - test:matrix
-sast:
-  extends: default
 secret_detection:
   extends: default
   image: registry.gitlab.com/security-products/secrets:7
   stage: secret-detection
-code_quality:
-  extends: default
 test:matrix:
   extends:
   - ".test-template"
