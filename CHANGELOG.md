@@ -1,3 +1,17 @@
+## v0.6.4 (2025-07-31)
+
+### Fix
+
+- build: ensure gdal and pre-commit integration for CI stability
+
+  - Add system dependencies for gdal to fix build issues in CI.
+
+  - Integrate and test pre-commit component in the pipeline.
+
+  - Ensure compatibility for Python 3.13 and Alpine images.
+
+  See merge request lalgonzales/adef-tools!28
+
 ## v0.6.3 (2025-07-19)
 
 ### Fix
