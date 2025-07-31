@@ -90,7 +90,6 @@ major_version_zero = true
 version_files = [
     "adef_tools/__init__.py",
     "pyproject.toml",
-    "uv.lock"
 ]
 
 [tool.commitizen.changeup]
