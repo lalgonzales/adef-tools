@@ -5,6 +5,5 @@
   before_script:
     - pip install uv
     - uv venv
-    - uv sync --index-strategy unsafe-best-match
   script:
     - uv run python -c "import adef_tools; print('adef-tools import successful')"

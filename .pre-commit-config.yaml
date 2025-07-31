@@ -30,10 +30,3 @@ repos:
       rev: 0.8.1
       hooks:
           - id: nbstripout
-
-    - repo: https://github.com/astral-sh/uv-pre-commit
-      # uv version.
-      rev: 0.8.0
-      hooks:
-        - id: uv-lock
-          args: ["--index-strategy=unsafe-best-match"]
