@@ -1,3 +1,31 @@
+## v0.6.5 (2025-08-01)
+
+### Perf
+
+- run test: matrix on main, MRs, tags; update uv.lock
+
+  - Update test:matrix rules to run on merge requests,
+
+  main branch, and tags for better CI coverage.
+
+  - Add uv-pre-commit hook to .pre-commit-config.yaml
+
+  for lockfile management.
+
+  - Install pre-commit in auto-bump template and run
+
+  hooks on version bump.
+
+  - Remove uv.lock from commitizen version_files to
+
+  avoid unnecessary version bumps.
+
+  - Comment out direct PyPI upload in upload_twine for
+
+  clarity.
+
+  See merge request lalgonzales/adef-tools!30
+
 ## v0.6.4 (2025-07-31)
 
 ### Fix
