@@ -38,6 +38,7 @@ classifiers = [
 ]
 
 dependencies = [
+    "dask-geopandas>=0.5.0",
     "dask[distributed]>=2025.4.1",
     "gdal>=3.10.0",
     "geoalchemy2>=0.17.1",
@@ -45,7 +46,6 @@ dependencies = [
     "matplotlib>=3.10.1",
     "owslib>=0.33.0",
     "psycopg2>=2.9.10",
-    "pyarrow>=20.0.0",
     "python-dotenv>=1.1.0",
     "rioxarray>=0.19.0",
     "sqlalchemy>=2.0.41",
@@ -56,14 +56,10 @@ dependencies = [
 adef-tools = "adef_tools.cli:cli"
 
 [project.urls]
-repository = "https://git.icf.gob.hn/alopez/adef-integ-tools"
-homepage = "https://git.icf.gob.hn/alopez/adef-integ-tools"
-issues = "https://git.icf.gob.hn/alopez/adef-integ-tools/-/issues"
+repository = "https://git.icf.gob.hn/lalgonzales/adef-tools"
+homepage = "https://git.icf.gob.hn/lalgonzales/adef-tools"
+issues = "https://git.icf.gob.hn/lalgonzales/adef-tools/-/issues"
 
-[project.optional-dependencies]
-dask = [
-    "dask-geopandas>=0.5.0",
-]
 
 [tool.hatch.build.targets.sdist]
 packages = ["adef_tools"]
@@ -84,13 +80,12 @@ max-line-length = 88
 name = "cz_changeup"
 tag_format = "v$version"
 version_scheme = "pep440"
-version = "0.6.3"
+version = "0.6.5"
 update_changelog_on_bump = true
 major_version_zero = true
 version_files = [
     "adef_tools/__init__.py",
     "pyproject.toml",
-    "uv.lock"
 ]
 
 [tool.commitizen.changeup]
@@ -115,9 +110,14 @@ bump_map = [
   { type = "refactor", bump = "patch" }
 ]
 
-[[tool.uv.index]]
-url = "https://girder.github.io/large_image_wheels"
+[tool.uv.sources]
+adef_wf = { path = "workflows/adef_hn" }
+gdal = { index = "girder" }
 
+[[tool.uv.index]]
+name = "girder"
+url = "https://girder.github.io/large_image_wheels"
+explicit = true
 
 [dependency-groups]
 tests = [
@@ -136,4 +136,10 @@ dev = [
 ]
 deploy = [
     "twine>=6.1.0",
+]
+pages = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.16",
+    "mkdocstrings>=0.30.0",
+    "mkdocstrings-python>=1.16.12",
 ]

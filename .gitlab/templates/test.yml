@@ -4,7 +4,8 @@
   image: docker.io/python:${PYTHON_VERSION}
   before_script:
     - pip install uv
+    # Del .venv if it exists
+    - if [ -d .venv ]; then rm -rf .venv; fi
     - uv venv
-    - uv sync --index-strategy unsafe-best-match
   script:
     - uv run python -c "import adef_tools; print('adef-tools import successful')"

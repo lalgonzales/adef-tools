@@ -20,7 +20,7 @@
       fi
     - uv venv
     - source .venv/bin/activate
-    - uv pip install -U commitizen cz-changeup
+    - uv pip install -U commitizen cz-changeup pre-commit
   script:
     - |
       set -e
@@ -38,6 +38,9 @@
       git checkout ${DEFAULT_BRANCH}
       cz bump --yes
       if [ -n "${GIT_REPO_URL}" ]; then
+        pre-commit run -a
+        git add .
+        git commit --amend --no-edit
         git push origin ${DEFAULT_BRANCH}:$CI_COMMIT_REF_NAME
         TAG=v$(cz version -p)
         echo "#!/bin/sh" > variables
