@@ -46,3 +46,6 @@ Archive.zip
 **.aux.xml
 
 ai-assistance-guides/
+workflows/adef_hn/.env_copy
+site/
+public/

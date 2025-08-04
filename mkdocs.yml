@@ -1,0 +1,24 @@
+site_name: Adef Tools ICF
+site_description: Documentación de Adef Tools ICF
+site_author: Luis Alfredo López Gonzales
+repo_url: https://icf.gob.hn/lalgonzales/adef-tools
+
+copyright: |
+  Copyright © 2025 lalgonzales | ICF
+
+nav:
+  - Home: index.md
+  - Acerca de: about.md
+  - Changelog: changelog.md
+  - API Reference:
+    - vector module: vector.md
+    - raster module: raster.md
+    - utils module: utils.md
+    - utils adef module: utils_adef.md
+    - adef functions: adef_fn.md
+theme:
+  name: material
+
+plugins:
+  - search
+  - mkdocstrings

@@ -40,7 +40,7 @@ classifiers = [
 dependencies = [
     "dask-geopandas>=0.5.0",
     "dask[distributed]>=2025.4.1",
-    "gdal==3.10.3",
+    "gdal>=3.10.0",
     "geoalchemy2>=0.17.1",
     "geopandas>=1.0.1",
     "matplotlib>=3.10.1",
@@ -56,14 +56,10 @@ dependencies = [
 adef-tools = "adef_tools.cli:cli"
 
 [project.urls]
-repository = "https://git.icf.gob.hn/alopez/adef-integ-tools"
-homepage = "https://git.icf.gob.hn/alopez/adef-integ-tools"
-issues = "https://git.icf.gob.hn/alopez/adef-integ-tools/-/issues"
+repository = "https://git.icf.gob.hn/lalgonzales/adef-tools"
+homepage = "https://git.icf.gob.hn/lalgonzales/adef-tools"
+issues = "https://git.icf.gob.hn/lalgonzales/adef-tools/-/issues"
 
-[project.optional-dependencies]
-dask = [
-    "dask-geopandas>=0.5.0",
-]
 
 [tool.hatch.build.targets.sdist]
 packages = ["adef_tools"]
@@ -115,10 +111,11 @@ bump_map = [
 ]
 
 [tool.uv.sources]
-gdal = { index = "girder-large-image-wheels" }
+adef_wf = { path = "workflows/adef_hn" }
+gdal = { index = "girder" }
 
 [[tool.uv.index]]
-name = "girder-large-image-wheels"
+name = "girder"
 url = "https://girder.github.io/large_image_wheels"
 explicit = true
 
@@ -139,4 +136,10 @@ dev = [
 ]
 deploy = [
     "twine>=6.1.0",
+]
+pages = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.16",
+    "mkdocstrings>=0.30.0",
+    "mkdocstrings-python>=1.16.12",
 ]
