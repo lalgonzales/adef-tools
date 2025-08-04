@@ -3,9 +3,20 @@
   stage: test
   image: docker.io/python:${PYTHON_VERSION}
   before_script:
-    - pip install uv
-    # Del .venv if it exists
-    - if [ -d .venv ]; then rm -rf .venv; fi
-    - uv venv
+    # Instala uv si no está
+    - if ! command -v uv >/dev/null 2>&1; then curl -LsSf https://astral.sh/uv/install.sh | sh; fi
+    - export PATH="$HOME/.local/bin:$PATH"
+    # Crea el venv único por versión si no existe
+    - if [ ! -d .venv-${PYTHON_VERSION} ]; then uv venv .venv-${PYTHON_VERSION}; fi
+    # Activa el venv
+    - source .venv-${PYTHON_VERSION}/bin/activate
+  cache:
+    key: "${CI_JOB_NAME}-${PYTHON_VERSION}"
+    paths:
+      - .venv-${PYTHON_VERSION}
+  artifacts:
+    paths:
+      - .venv-${PYTHON_VERSION}
+    expire_in: 1 day
   script:
-    - uv run python -c "import adef_tools; print('adef-tools import successful')"
+    - python -c "import adef_tools; print('adef-tools import successful')"

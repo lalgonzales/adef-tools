@@ -2,54 +2,51 @@
   stage: auto-bump
   image: docker.io/python:3.13
   variables:
-    GIT_USER_EMAIL: "ci-runner@gitlab.com"
+    GIT_USER_EMAIL: "ci-runner@${CI_SERVER_HOST}"
     GIT_USER_NAME: "GitLab CI"
-    UV_LINK_MODE: copy
     DEFAULT_BRANCH: "main"
+    AUTO_BUMP_TOKEN_PROTECTED: "${{ inputs.auto_bump_token_protected }}"
+    UV_LINK_MODE: copy
   before_script:
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.local/bin:$PATH"
-    - git config --global user.email "${GIT_USER_EMAIL}"
-    - git config --global user.name "${GIT_USER_NAME}"
-    - |
-      if [ -n "${GIT_TOKEN_VAR}" ] && [ -n "${GIT_REPO_URL}" ]; then
-        git remote set-url origin "${GIT_REPO_URL}"
-      elif [ -n "${GIT_USER_BOT}" ] && [ -n "${GIT_TOKEN_VAR}" ] && [ -n "${GIT_HOST}" ] && [ -n "${GIT_PROJECT_PATH}" ]; then
-        TOKEN_VALUE=$(eval echo \$${GIT_TOKEN_VAR})
-        git remote set-url origin "https://${GIT_USER_BOT}:${TOKEN_VALUE}@${GIT_HOST}/${GIT_PROJECT_PATH}.git"
-      fi
-    - uv venv
-    - source .venv/bin/activate
+    - git config --global user.email "$GIT_USER_EMAIL"
+    - git config --global user.name "$GIT_USER_NAME"
+    - uv venv .bump-venv
+    - source .bump-venv/bin/activate
     - uv pip install -U commitizen cz-changeup pre-commit
   script:
     - |
-      set -e
-      NEXT_TAG=$(cz bump --get-next 2>&1) || true
-      if echo "$NEXT_TAG" | grep -q '\[NO_COMMITS_TO_BUMP\]'; then
-        echo "No commits elegibles para bump. Saliendo exitosamente."
-        exit 0
-      fi
-      NEXT_TAG="v$NEXT_TAG"
-      echo "Next version will be: $NEXT_TAG"
-      git tag -d "$NEXT_TAG" || true
-      if git show-ref --verify --quiet refs/heads/${DEFAULT_BRANCH}; then
-        git branch -D ${DEFAULT_BRANCH} || true
-      fi
-      git checkout ${DEFAULT_BRANCH}
-      cz bump --yes
-      if [ -n "${GIT_REPO_URL}" ]; then
+        set -e
+        if [ -z "$AUTO_BUMP_TOKEN_PROTECTED" ]; then
+          echo "❌ ERROR: AUTO_BUMP_TOKEN_PROTECTED is required for auto-bump job. Aborting."
+          exit 1
+        fi
+        NEXT_TAG=$(cz bump --get-next 2>&1) || true
+        if echo "$NEXT_TAG" | grep -q '\[NO_COMMITS_TO_BUMP\]'; then
+          echo "No commits elegibles para bump. Saliendo exitosamente."
+          exit 0
+        fi
+        NEXT_TAG="v$NEXT_TAG"
+        echo "Next version will be: $NEXT_TAG"
+        git tag -d "$NEXT_TAG" || true
+        if git show-ref --verify --quiet refs/heads/${DEFAULT_BRANCH}; then
+          git branch -D ${DEFAULT_BRANCH} || true
+        fi
+        git checkout ${DEFAULT_BRANCH}
+        source .bump-venv/bin/activate
+        cz bump --yes
         pre-commit run -a
         git add .
         git commit --amend --no-edit
+        remote_url="https://oauth2:${AUTO_BUMP_TOKEN_PROTECTED}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+        git remote set-url origin "$remote_url"
         git push origin ${DEFAULT_BRANCH}:$CI_COMMIT_REF_NAME
         TAG=v$(cz version -p)
         echo "#!/bin/sh" > variables
         echo "export TAG='$TAG'" >> variables
         git push origin --tags
         echo "✅ Version bumped to $TAG"
-      else
-        echo "⚠️ Git remote not configured, skipping push"
-      fi
   artifacts:
     paths:
       - variables

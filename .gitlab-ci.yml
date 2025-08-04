@@ -1,10 +1,11 @@
 stages:
 - lint
 - test
+- testpy
 - release
-- build
-- deploy
 - auto-bump
+- deploy
+- syncgh
 variables:
   DOCKER_IMAGE: alpine:latest
   UV_LINK_MODE: copy
@@ -28,15 +29,16 @@ include:
       pre-commit-file: .pre-commit-config.yaml
       pre-commit-token-protected: $CI_PROTECTED_TOKEN
       pre-commit-token-unprotected: $CI_NOPROTECTED_TOKEN
+      pre-commit-stage: lint
 test:matrix:
-  extends:
-  - ".test-template"
+  stage: testpy
+  extends: .test-template
   parallel:
     matrix:
-    - PYTHON_VERSION: '3.10'
-    - PYTHON_VERSION: '3.11'
-    - PYTHON_VERSION: '3.12'
-    - PYTHON_VERSION: '3.13'
+      - PYTHON_VERSION: "3.10"
+      - PYTHON_VERSION: "3.11"
+      - PYTHON_VERSION: "3.12"
+      - PYTHON_VERSION: "3.13"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -44,12 +46,10 @@ test:matrix:
 auto-bump:
   extends: ".auto-bump-template"
   variables:
-    GIT_USER_EMAIL: ci-runner@icf.gob.hn
-    GIT_USER_NAME: ICF CI Runner
-    DEFAULT_BRANCH: main
-    GIT_BOT_USER: "${CI_PROTECTED_BOT_USER}"
-    GIT_TOKEN_VAR: CI_PROTECTED_TOKEN
-    GIT_REPO_URL: https://${CI_PROTECTED_BOT_USER}:${CI_PROTECTED_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git
+    AUTO_BUMP_TOKEN_PROTECTED: $CI_PROTECTED_TOKEN
+    GIT_USER_EMAIL: "ci-runner@${CI_SERVER_HOST}"
+    GIT_USER_NAME: "GitLab CI"
+    DEFAULT_BRANCH: "main"
   dependencies:
   - test:matrix
 upload_twine:
@@ -77,13 +77,13 @@ upload_twine:
   - if: "$CI_COMMIT_TAG"
     when: always
 sync_to_github:
-  stage: deploy
+  stage: syncgh
   image: docker.io/python:3.13
   before_script:
   - curl -LsSf https://astral.sh/uv/install.sh | sh
   - export PATH="$HOME/.local/bin:$PATH"
-  - uv venv
-  - source .venv/bin/activate
+  - uv venv .gh
+  - source .gh/bin/activate
   - uv pip install git-filter-repo
   - git config --global user.email "alopez@icf.gob.hn"
   - git config --global user.name "Luis Alfredo López Gonzales"
@@ -106,29 +106,26 @@ create-release:
     description: "Release $CI_COMMIT_TAG of components in $CI_PROJECT_PATH"
 create-pages:
   stage: deploy
-  image: docker.io/python:3.13
+  image: docker.io/python:3.13-slim
   before_script:
-  - curl -LsSf https://astral.sh/uv/install.sh | sh
-  - export PATH="$HOME/.local/bin:$PATH"
-  - uv venv
-  - source .venv/bin/activate
+  - pip install uv
+  - uv venv .pages
+  - source .pages/bin/activate
   script:
-  - uv sync --group pages
-  - uv pip install mkdocs-material-extensions
+  - uv sync --group pages --active
   - mkdocs build -d public
   pages: true
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
 test-pages:
   stage: test
-  image: docker.io/python:3.13
+  image: docker.io/python:3.13-slim
   before_script:
-  - curl -LsSf https://astral.sh/uv/install.sh | sh
-  - export PATH="$HOME/.local/bin:$PATH"
-  - uv venv
-  - source .venv/bin/activate
+  - pip install uv
+  - uv venv .pages
+  - source .pages/bin/activate
   script:
-  - uv sync --group pages
+  - uv sync --group pages --active
   - mkdocs build -d test-site
   artifacts:
     paths:
