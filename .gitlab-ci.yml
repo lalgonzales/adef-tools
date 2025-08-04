@@ -24,7 +24,7 @@ include:
   # - component: $CI_SERVER_FQDN/components/code-quality-oss/pylint@main
   - component: $CI_SERVER_FQDN/components/to-be-continuous/pre-commit/gitlab-ci-pre-commit@main
     inputs:
-      pre-commit-image: python:3.13-alpine
+      pre-commit-image: docker.io/python:3.13-alpine
       pre-commit-file: .pre-commit-config.yaml
       pre-commit-token-protected: $CI_PROTECTED_TOKEN
       pre-commit-token-unprotected: $CI_NOPROTECTED_TOKEN
@@ -104,3 +104,34 @@ create-release:
   release:
     tag_name: $CI_COMMIT_TAG
     description: "Release $CI_COMMIT_TAG of components in $CI_PROJECT_PATH"
+create-pages:
+  stage: deploy
+  image: docker.io/python:3.13
+  before_script:
+  - curl -LsSf https://astral.sh/uv/install.sh | sh
+  - export PATH="$HOME/.local/bin:$PATH"
+  - uv venv
+  - source .venv/bin/activate
+  script:
+  - uv sync --group pages
+  - uv pip install mkdocs-material-extensions
+  - mkdocs build -d public
+  pages: true
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+test-pages:
+  stage: test
+  image: docker.io/python:3.13
+  before_script:
+  - curl -LsSf https://astral.sh/uv/install.sh | sh
+  - export PATH="$HOME/.local/bin:$PATH"
+  - uv venv
+  - source .venv/bin/activate
+  script:
+  - uv sync --group pages
+  - mkdocs build -d test-site
+  artifacts:
+    paths:
+    - test-site
+  rules:
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
