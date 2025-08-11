@@ -1,6 +1,6 @@
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v5.0.0
+      rev: v6.0.0
       hooks:
           - id: check-toml
           - id: check-yaml
@@ -32,6 +32,6 @@ repos:
           - id: nbstripout
     - repo: https://github.com/astral-sh/uv-pre-commit
       # uv version.
-      rev: 0.8.3
+      rev: 0.8.8
       hooks:
         - id: uv-lock
